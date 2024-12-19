@@ -31,7 +31,7 @@ export default function RootLayout({
           <main className="flex-grow">{children}</main>
           <footer className="bg-gray-800 mt-12">
             <div className="container mx-auto px-4 py-8 text-center">
-              <p>&copy; {new Date().getFullYear()} Alex Johnson. All rights reserved.</p>
+              <p>&copy; {new Date().getFullYear()} Steven Carreon. All rights reserved.</p>
               <div className="flex justify-center space-x-6 mt-4">
                 <a href="https://github.com/Jeeeiiiiiii" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition-colors">
                   <FaGithub className="text-2xl" />
