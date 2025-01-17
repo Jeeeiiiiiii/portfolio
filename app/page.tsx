@@ -45,11 +45,11 @@ export default function Home() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 text-center">
           <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
             <h3 className="text-lg font-semibold mb-2">Cloud Platforms</h3>
-            <p className="text-gray-300">AWS, Azure, Google Cloud</p>
+            <p className="text-gray-300">AWS</p>
           </div>
           <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
             <h3 className="text-lg font-semibold mb-2">Infrastructure as Code</h3>
-            <p className="text-gray-300">Terraform, CloudFormation, Ansible</p>
+            <p className="text-gray-300">Terraform and CloudFormation</p>
           </div>
           <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
             <h3 className="text-lg font-semibold mb-2">Containerization</h3>
@@ -61,11 +61,11 @@ export default function Home() {
           </div>
           <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
             <h3 className="text-lg font-semibold mb-2">Programming</h3>
-            <p className="text-gray-300">Python, Go, Bash</p>
+            <p className="text-gray-300">Python, Bash</p>
           </div>
           <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
             <h3 className="text-lg font-semibold mb-2">Monitoring</h3>
-            <p className="text-gray-300">Prometheus, Grafana, ELK Stack</p>
+            <p className="text-gray-300">ELK Stack</p>
           </div>
         </div>
       </section>

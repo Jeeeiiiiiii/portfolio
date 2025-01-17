@@ -7,8 +7,6 @@ export default function Skills() {
             <h2 className="text-2xl font-bold mb-6">Cloud Platforms</h2>
             <ul className="space-y-2 text-gray-300">
               <li>Amazon Web Services (AWS)</li>
-              <li>Microsoft Azure</li>
-              <li>Google Cloud Platform (GCP)</li>
             </ul>
           </div>
           <div className="bg-gray-800 p-8 rounded-lg shadow-lg">
@@ -16,8 +14,6 @@ export default function Skills() {
             <ul className="space-y-2 text-gray-300">
               <li>Terraform</li>
               <li>AWS CloudFormation</li>
-              <li>Ansible</li>
-              <li>Pulumi</li>
             </ul>
           </div>
           <div className="bg-gray-800 p-8 rounded-lg shadow-lg">
@@ -26,7 +22,6 @@ export default function Skills() {
               <li>Docker</li>
               <li>Kubernetes</li>
               <li>Amazon ECS</li>
-              <li>OpenShift</li>
             </ul>
           </div>
           <div className="bg-gray-800 p-8 rounded-lg shadow-lg">
@@ -35,25 +30,19 @@ export default function Skills() {
               <li>Jenkins</li>
               <li>GitLab CI</li>
               <li>GitHub Actions</li>
-              <li>AWS CodePipeline</li>
             </ul>
           </div>
           <div className="bg-gray-800 p-8 rounded-lg shadow-lg">
             <h2 className="text-2xl font-bold mb-6">Programming Languages</h2>
             <ul className="space-y-2 text-gray-300">
               <li>Python</li>
-              <li>Go</li>
               <li>Bash</li>
-              <li>JavaScript/TypeScript</li>
             </ul>
           </div>
           <div className="bg-gray-800 p-8 rounded-lg shadow-lg">
             <h2 className="text-2xl font-bold mb-6">Monitoring &amp; Logging</h2>
             <ul className="space-y-2 text-gray-300">
-              <li>Prometheus</li>
-              <li>Grafana</li>
               <li>ELK Stack (Elasticsearch, Logstash, Kibana)</li>
-              <li>Datadog</li>
             </ul>
           </div>
         </div>
