@@ -333,12 +333,7 @@ export default function TodoList() {
 };
 
 // First: define `params` as a Promise type
-type BlogPostParams = Promise<{
-  params: {
-    slug: string;
-  };
-  searchParams: { [key: string]: string | string[] | undefined };
-}>;
+
 
 // Second: make the function async
 export default async function BlogPostPage({ params }: { params: { slug: string } }) {
