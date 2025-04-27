@@ -332,16 +332,18 @@ export default function TodoList() {
   return blogPosts[slug] || blogPosts["building-responsive-uis-with-tailwind"];
 };
 
-interface BlogPostParams {
+// First: define `params` as a Promise type
+type BlogPostParams = Promise<{
   params: {
     slug: string;
   };
   searchParams: { [key: string]: string | string[] | undefined };
-}
+}>;
 
-// Remove the asyword since getBlogPost is not actually async
-export default function BlogPostPage({ params }: BlogPostParams) {
-  const post = getBlogPost(params.slug);
+// Second: make the function async
+export default async function BlogPostPage({ params }: { params: { slug: string } }) {
+  const { slug } = await params; // await because params is a Promise
+  const post = getBlogPost(slug);
   
   return (
     <div className="max-w-3xl mx-auto">
