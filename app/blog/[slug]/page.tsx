@@ -334,12 +334,11 @@ export default function TodoList() {
 
 
 
-// Second: make the function async
-export default function BlogPostPage({ params }: { params: { slug: string } }) {
+export default async function BlogPostPage({ params }: { params: { slug: string } }) {
   const { slug } = params; // Directly access `slug` from `params`
   
   // Get the blog post based on the slug
-  const post = getBlogPost(slug);
+  const post = await getBlogPost(slug);
   
   return (
     <div className="max-w-3xl mx-auto">
