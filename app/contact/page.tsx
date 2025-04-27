@@ -1,6 +1,5 @@
 "use client";
-import { useState } from 'react';
-import Image from 'next/image';
+
 
 
 import { useLoadScript, GoogleMap, Marker } from '@react-google-maps/api';
