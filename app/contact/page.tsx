@@ -1,7 +1,4 @@
 "use client";
-
-
-
 import { useLoadScript, GoogleMap, Marker } from '@react-google-maps/api';
 
 export default function ContactPage() {
@@ -17,7 +14,7 @@ export default function ContactPage() {
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">Get In Touch</h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Have a project in mind or want to discuss a potential collaboration? I'd love to hear from you!
+            Have a project in mind or want to discuss a potential collaboration? I&apos;d love to hear from you!
           </p>
         </div>
 
