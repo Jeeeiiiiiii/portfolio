@@ -61,8 +61,9 @@ const projects = [
   // Add more projects with similar structure
 ];
 
-export function generateMetadata({ params }: { params: { id: string } }) {
-  const project = projects.find(p => p.id === params.id);
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params; // Await the params promise
+  const project = projects.find(p => p.id === resolvedParams.id);
   
   if (!project) {
     return {
@@ -76,8 +77,9 @@ export function generateMetadata({ params }: { params: { id: string } }) {
   };
 }
 
-export default function ProjectPage({ params }: { params: { id: string } }) {
-  const project = projects.find(p => p.id === params.id);
+export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params; // Await the params promise
+  const project = projects.find(p => p.id === resolvedParams.id);
   
   if (!project) {
     notFound();
