@@ -13,7 +13,7 @@ interface BlogPostsCollection {
   [key: string]: BlogPost;
 }
 
-const getBlogPost = (slug: string): BlogPost => {
+const getBlogPost = (slug: string) => {
   const blogPosts: BlogPostsCollection = {
     "building-responsive-uis-with-tailwind": {
       title: "Deploying 2-tier Architecture on AWS through Terraform",
@@ -334,8 +334,8 @@ export default function TodoList() {
 
 
 
-export default async function BlogPostPage({ params }: { params: { slug: string } }) {
-  const { slug } = params; // Directly access `slug` from `params`
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params; // Directly access `slug` from `params`
   
   // Get the blog post based on the slug
   const post = await getBlogPost(slug);
