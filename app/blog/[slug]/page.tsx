@@ -336,10 +336,12 @@ interface BlogPostParams {
   params: {
     slug: string;
   };
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
-export default async function BlogPostPage({ params }: BlogPostParams) {
-  const post = await getBlogPost(params.slug);
+// Remove the async keyword since getBlogPost is not actually async
+export default function BlogPostPage({ params }: BlogPostParams) {
+  const post = getBlogPost(params.slug);
   
   return (
     <div className="max-w-3xl mx-auto">
