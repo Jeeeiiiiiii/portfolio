@@ -333,14 +333,14 @@ export default function TodoList() {
 };
 
 // First: define `params` as a Promise type
-type BlogPostParams = Promise<{
+interface BlogPostParams {
   params: {
     slug: string;
   };
   searchParams: { [key: string]: string | string[] | undefined };
-}>;
+}
 
-export default async function BlogPostPage({ params }: Awaited<BlogPostParams>) {
+export default function BlogPostPage({ params }: BlogPostParams) {
   const post = getBlogPost(params.slug);
   
   return (
