@@ -340,8 +340,9 @@ type Props = {
   searchParams: { [key: string]: string | string[] | undefined }
 }
 
-export default function BlogPostPage(props: Props) {
-  const post = getBlogPost(props.params.slug);
+export default async function BlogPostPage(props: Props) {
+  const params = await props.params;
+  const post = getBlogPost(params.slug);
   
   return (
     <div className="max-w-3xl mx-auto">
