@@ -332,16 +332,16 @@ export default function TodoList() {
   return blogPosts[slug] || blogPosts["building-responsive-uis-with-tailwind"];
 };
 
-interface BlogPostParams {
-  params: {
-    slug: string;
-  };
-  searchParams: { [key: string]: string | string[] | undefined };
+
+
+// Update the interface to match Next.js 13 App Router types
+type Props = {
+  params: { slug: string }
+  searchParams: { [key: string]: string | string[] | undefined }
 }
 
-// Remove the async keyword since getBlogPost is not actually async
-export default function BlogPostPage({ params }: BlogPostParams) {
-  const post = getBlogPost(params.slug);
+export default function BlogPostPage(props: Props) {
+  const post = getBlogPost(props.params.slug);
   
   return (
     <div className="max-w-3xl mx-auto">
