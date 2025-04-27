@@ -127,7 +127,7 @@ const BrowserLayout = ({ children }: BrowserLayoutProps) => {
               <div className="w-3 h-3 rounded-sm bg-gray-400 hover:bg-gray-300"></div>
               <div className="w-3 h-3 rounded-sm bg-red-500 hover:bg-red-400"></div>
             </div>
-            <span className="text-sm font-medium">Steven's Portfolio (Minimized)</span>
+            <span className="text-sm font-medium">Steven&apos;s Portfolio (Minimized)</span>
           </div>
           <span className="text-xs text-gray-500">Click to restore</span>
         </div>
@@ -152,7 +152,7 @@ const BrowserLayout = ({ children }: BrowserLayoutProps) => {
               <path d="M0 0h24v24H0z" fill="none"/>
               <path d="M4 8h16V6H4v2zm0 2h16v2H4v-2zm0 6h16v-2H4v2zm0 2h16v2H4v-2z"/>
             </svg>
-            <span className="text-sm font-medium">Steven's Portfolio</span>
+            <span className="text-sm font-medium">Steven&apos;s Portfolio</span>
           </div>
           <div className="flex space-x-2">
             {/* Windows-style window controls */}
