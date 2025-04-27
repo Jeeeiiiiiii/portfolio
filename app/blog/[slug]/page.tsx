@@ -341,8 +341,7 @@ type BlogPostParams = Promise<{
 }>;
 
 export default async function BlogPostPage({ params }: Awaited<BlogPostParams>) {
-  const { slug } = params; // ❗ no need to `await params` here anymore because it’s already awaited
-  const post = getBlogPost(slug);
+  const post = getBlogPost(params.slug);
   
   return (
     <div className="max-w-3xl mx-auto">
