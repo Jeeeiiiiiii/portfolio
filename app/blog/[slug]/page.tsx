@@ -241,7 +241,7 @@ npm install @aws-sdk/client-dynamodb aws-sdk</code></pre>
 const AWS = require('aws-sdk');
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
-exports.handler (event) => {
+exports.handler = async (event) => {
   const { title, description } = JSON.parse(event.body);
   
   const params = {
@@ -295,14 +295,14 @@ import { useState, useEffect } from 'react';
 export default function TodoList() {
   const [todos, setTodos] = useState([]);
 
-  const fetchTodos () => {
+  const fetchTodos = async () => {
     const response = await fetch('/api/todos');
     const data = await response.json();
     setTodos(data);
   };
 
   // Add todo function
-  const addTodo (todo) => {
+  const addTodo = async (todo) => {
     await fetch('/api/todos', {
       method: 'POST',
       body: JSON.stringify(todo)
@@ -332,15 +332,13 @@ export default function TodoList() {
   return blogPosts[slug] || blogPosts["building-responsive-uis-with-tailwind"];
 };
 
-// First: define `params` as a Promise type
-interface BlogPostParams {
-  params: {
-    slug: string;
-  };
-  searchParams: { [key: string]: string | string[] | undefined };
+// Remove the BlogPostParams type as it's not needed
+type Props = {
+  params: { slug: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
 }
 
-export default function BlogPostPage({ params }: BlogPostParams) {
+export default function BlogPostPage({ params }: Props) {
   const post = getBlogPost(params.slug);
   
   return (
