@@ -332,14 +332,20 @@ export default function TodoList() {
   return blogPosts[slug] || blogPosts["building-responsive-uis-with-tailwind"];
 };
 
-// Remove the BlogPostParams type as it's not needed
-type Props = {
-  params: { slug: string };
-  searchParams?: { [key: string]: string | string[] | undefined };
-}
+// First: define `params` as a Promise type
+type BlogPostParams = Promise<{
+  params: {
+    slug: string;
+  };
+  searchParams: { [key: string]: string | string[] | undefined };
+}>;
 
-export default function BlogPostPage({ params }: Props) {
-  const post = getBlogPost(params.slug);
+// Second: make the function async
+export default async function BlogPostPage({ params }: { params: BlogPostParams }) {
+  const resolvedParams = await params; // await the BlogPostParams promise
+  const { slug } = resolvedParams.params; // extract the slug from the resolved params
+
+  const post = getBlogPost(slug);
   
   return (
     <div className="max-w-3xl mx-auto">
