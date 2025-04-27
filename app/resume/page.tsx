@@ -1,6 +1,4 @@
 import { BsDownload } from "react-icons/bs";
-import Image from 'next/image';
-import Link from 'next/link';
 
 export const metadata = {
   title: "Resume | Steven Carreon",
