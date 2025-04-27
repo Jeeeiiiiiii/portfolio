@@ -241,7 +241,7 @@ npm install @aws-sdk/client-dynamodb aws-sdk</code></pre>
 const AWS = require('aws-sdk');
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
-exports.handler = async (event) => {
+exports.handler (event) => {
   const { title, description } = JSON.parse(event.body);
   
   const params = {
@@ -295,14 +295,14 @@ import { useState, useEffect } from 'react';
 export default function TodoList() {
   const [todos, setTodos] = useState([]);
 
-  const fetchTodos = async () => {
+  const fetchTodos () => {
     const response = await fetch('/api/todos');
     const data = await response.json();
     setTodos(data);
   };
 
   // Add todo function
-  const addTodo = async (todo) => {
+  const addTodo (todo) => {
     await fetch('/api/todos', {
       method: 'POST',
       body: JSON.stringify(todo)
@@ -340,8 +340,8 @@ interface BlogPostParams {
   searchParams: { [key: string]: string | string[] | undefined };
 }
 
-export default async function BlogPostPage({ params }: BlogPostParams) {
-  const post = await getBlogPost(params.slug);
+export default function BlogPostPage({ params }: BlogPostParams) {
+  const post = getBlogPost(params.slug);
   
   return (
     <div className="max-w-3xl mx-auto">
