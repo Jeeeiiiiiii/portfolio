@@ -335,8 +335,10 @@ export default function TodoList() {
 
 
 // Second: make the function async
-export default async function BlogPostPage({ params }: { params: { slug: string } }) {
-  const { slug } = await params; // await because params is a Promise
+export default function BlogPostPage({ params }: { params: { slug: string } }) {
+  const { slug } = params; // Directly access `slug` from `params`
+  
+  // Get the blog post based on the slug
   const post = getBlogPost(slug);
   
   return (
