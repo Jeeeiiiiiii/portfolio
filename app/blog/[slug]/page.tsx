@@ -333,11 +333,15 @@ export default function TodoList() {
 };
 
 // First: define `params` as a Promise type
+type BlogPostParams = Promise<{
+  params: {
+    slug: string;
+  };
+  searchParams: { [key: string]: string | string[] | undefined };
+}>;
 
-
-// Second: make the function async
-export default async function BlogPostPage({ params }: { params: { slug: string } }) {
-  const { slug } = await params; // await because params is a Promise
+export default async function BlogPostPage({ params }: Awaited<BlogPostParams>) {
+  const { slug } = params; // ❗ no need to `await params` here anymore because it’s already awaited
   const post = getBlogPost(slug);
   
   return (
