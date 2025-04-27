@@ -13,7 +13,7 @@ interface BlogPostsCollection {
   [key: string]: BlogPost;
 }
 
-const getBlogPost = (slug: string) => {
+const getBlogPost = (slug: string): BlogPost => {
   const blogPosts: BlogPostsCollection = {
     "building-responsive-uis-with-tailwind": {
       title: "Deploying 2-tier Architecture on AWS through Terraform",
