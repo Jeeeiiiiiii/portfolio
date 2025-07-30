@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ArrowLeft, ExternalLink, Github } from 'lucide-react';
+import Footer from '@/components/Footer';
 
 // Sample project data - in a real app, you might fetch this from a CMS or API
 const projects = [
@@ -86,137 +88,175 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
   }
   
   return (
-    <div className="py-12 md:py-20">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto p-8">
         {/* Back to Projects */}
         <div className="mb-8">
-          <Link href="/projects" className="text-blue-600 hover:text-blue-800 flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
-            </svg>
-            Back to Projects
+          <Link href="/projects" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Portfolio Browser
           </Link>
         </div>
-        
-        {/* Project Header */}
-        <div className="mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">{project.title}</h1>
-          <div className="flex flex-wrap gap-2 mb-6">
-            {project.technologies.map((tech) => (
-              <span key={tech} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-md">
-                {tech}
-              </span>
-            ))}
-          </div>
-          <p className="text-xl text-gray-600">
-            {project.description}
-          </p>
-        </div>
-        
-        {/* Main Project Image */}
-        <div className="relative h-96 mb-12 rounded-xl overflow-hidden shadow-lg">
-          <Image 
-            src={project.image} 
-            alt={project.title} 
-            fill
-            className="object-cover"
-            priority
-          />
-        </div>
-        
-        {/* Project Details */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
-          <div className="md:col-span-2">
-            <h2 className="text-2xl font-bold mb-4">Project Overview</h2>
-            <div className="prose max-w-none">
-              {project.longDescription.split('\n').map((paragraph, index) => (
-                <p key={index} className="mb-4">
-                  {paragraph}
-                </p>
-              ))}
-            </div>
-          </div>
-          
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Project Links</h2>
-            <div className="space-y-4">
-              <a 
-                href={project.demoUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clipRule="evenodd" />
-                </svg>
-                Live Demo
-              </a>
-              <a 
-                href={project.githubUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 2a8 8 0 00-2.53 15.59c.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0010 2z" clipRule="evenodd" />
-                </svg>
-                GitHub Repository
-              </a>
-            </div>
-          </div>
-        </div>
-        
-        {/* Additional Images */}
-        {project.additionalImages && project.additionalImages.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold mb-6">Project Gallery</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {project.additionalImages.map((image, index) => (
-                <div key={index} className="relative h-64 rounded-lg overflow-hidden shadow-md">
-                  <Image 
-                    src={image} 
-                    alt={`${project.title} screenshot ${index + 1}`} 
-                    fill
-                    className="object-cover"
-                  />
+
+        {/* Project Detail Card */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          {/* Project Header */}
+          <div className="p-8 border-b border-gray-200">
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold mb-4">{project.title}</h1>
+                <p className="text-gray-600 mb-4">{project.description}</p>
+                
+                <div className="flex gap-4 mb-6">
+                  <a 
+                    href={project.demoUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Live Demo
+                  </a>
+                  <a 
+                    href={project.githubUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <Github className="w-4 h-4" />
+                    View Code
+                  </a>
                 </div>
-              ))}
+
+                <div className="flex flex-wrap gap-2">
+                  {project.technologies.map((tech) => (
+                    <span key={tech} className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-md">
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
-        )}
-        
-        {/* Next/Previous Project Navigation */}
-        <div className="border-t border-gray-200 pt-8 mt-12">
-          <div className="flex flex-col sm:flex-row justify-between">
-            <div>
-              {projects.findIndex(p => p.id === project.id) > 0 && (
-                <Link 
-                  href={`/projects/${projects[projects.findIndex(p => p.id === project.id) - 1].id}`}
-                  className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
-                  </svg>
-                  Previous Project
-                </Link>
-              )}
+
+          {/* Main Project Image */}
+          <div className="p-8">
+            <div className="relative h-96 mb-8 rounded-lg overflow-hidden bg-gray-100">
+              <Image 
+                src={project.image} 
+                alt={project.title} 
+                fill
+                className="object-cover"
+                priority
+              />
             </div>
-            <div>
-              {projects.findIndex(p => p.id === project.id) < projects.length - 1 && (
-                <Link 
-                  href={`/projects/${projects[projects.findIndex(p => p.id === project.id) + 1].id}`}
-                  className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
-                >
-                  Next Project
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </Link>
-              )}
+
+            {/* Project Details */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2">
+                <h2 className="text-xl font-semibold mb-4">Project Overview</h2>
+                <div className="prose max-w-none text-gray-700">
+                  {project.longDescription.split('\n').map((paragraph, index) => (
+                    paragraph.trim() && (
+                      <p key={index} className="mb-4 leading-relaxed">
+                        {paragraph.trim()}
+                      </p>
+                    )
+                  ))}
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 p-6 rounded-lg h-fit">
+                <h3 className="text-lg font-semibold mb-4">Project Details</h3>
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-2">Technologies Used</h4>
+                    <div className="flex flex-wrap gap-1">
+                      {project.technologies.map((tech) => (
+                        <span key={tech} className="px-2 py-1 bg-white text-gray-600 text-xs rounded border">
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-2">Links</h4>
+                    <div className="space-y-2">
+                      <a 
+                        href={project.demoUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        Live Demo
+                      </a>
+                      <a 
+                        href={project.githubUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+                      >
+                        <Github className="w-3 h-3" />
+                        Source Code
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Images */}
+            {project.additionalImages && project.additionalImages.length > 0 && (
+              <div className="mt-12">
+                <h2 className="text-xl font-semibold mb-6">Project Gallery</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {project.additionalImages.map((image, index) => (
+                    <div key={index} className="relative h-48 rounded-lg overflow-hidden bg-gray-100">
+                      <Image 
+                        src={image} 
+                        alt={`${project.title} screenshot ${index + 1}`} 
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Navigation */}
+          <div className="p-8 border-t border-gray-200">
+            <div className="flex justify-between items-center">
+              <div>
+                {projects.findIndex(p => p.id === project.id) > 0 && (
+                  <Link 
+                    href={`/projects/${projects[projects.findIndex(p => p.id === project.id) - 1].id}`}
+                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Previous Project
+                  </Link>
+                )}
+              </div>
+              <div>
+                {projects.findIndex(p => p.id === project.id) < projects.length - 1 && (
+                  <Link 
+                    href={`/projects/${projects[projects.findIndex(p => p.id === project.id) + 1].id}`}
+                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
+                  >
+                    Next Project
+                    <ExternalLink className="w-4 h-4" />
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
