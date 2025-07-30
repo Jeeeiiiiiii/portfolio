@@ -1,6 +1,5 @@
 "use client";
 import Image from "next/image";
-import Link from "next/link";
 import { useState } from 'react';
 import { X, Minus, Square, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import Footer from '@/components/Footer';

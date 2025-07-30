@@ -1,8 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { SiNextdotjs, SiTypescript, SiTailwindcss, SiAmazonwebservices, SiDocker, SiKubernetes, SiTerraform, SiPrometheus, SiGrafana } from 'react-icons/si';
-import { BsDownload } from "react-icons/bs";
-import { FaGithub } from "react-icons/fa";
 import { Mail, Github, Linkedin, Download } from 'lucide-react';
 import Footer from '@/components/Footer';
 
@@ -61,13 +59,13 @@ export default function AboutPage() {
               <p className="text-gray-600 mb-6">Turning concepts into fully functional, engaging, and efficient applications.</p>
               
               <div className="flex gap-3 mb-6">
-                <a href="mailto:your.email@example.com" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <a href="mailto:aurjei.steven.carreon@gmail.com" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                   <Mail className="w-5 h-5 text-gray-700" />
                 </a>
-                <a href="https://github.com/yourusername" target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <a href="https://github.com/Jeeeiiiiiii" target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                   <Github className="w-5 h-5 text-gray-700" />
                 </a>
-                <a href="https://linkedin.com/in/yourusername" target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <a href="https://linkedin.com/in/rjcarreon" target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                   <Linkedin className="w-5 h-5 text-gray-700" />
                 </a>
                 <a href="/resume.pdf" target="_blank" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 rounded-lg transition-colors">
@@ -121,7 +119,13 @@ export default function AboutPage() {
             <Github className="w-5 h-5" />
             <h3 className="text-lg font-semibold">GitHub</h3>
           </div>
-          <img src="http://ghchart.rshah.org/Jeeeiiiiiii" alt="Jeeeiiiiiii's Github chart" className="w-full h-32 object-contain"/>
+          <Image 
+            src="http://ghchart.rshah.org/Jeeeiiiiiii" 
+            alt="Jeeeiiiiiii's Github chart" 
+            width={800}
+            height={128}
+            className="w-full h-32 object-contain"
+          />
         </div>
 
         {/* Experience Section */}
