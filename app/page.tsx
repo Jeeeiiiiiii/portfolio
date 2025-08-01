@@ -51,12 +51,12 @@ export default function AboutPage() {
             <div className="flex-1">
               <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
                 <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                Davao City, Philippines
+                Cavite, Philippines
               </div>
               
-              <h1 className="text-4xl font-bold mb-2">Steven Carreon</h1>
-              <h2 className="text-xl text-gray-700 mb-4">Cloud || Devops Engineer</h2>
-              <p className="text-gray-600 mb-6">Turning concepts into fully functional, engaging, and efficient applications.</p>
+              <h1 className="text-4xl font-bold mb-2 text-gray-900">Steven Carreon</h1>
+              <h2 className="text-xl text-gray-800 mb-4">Cloud || Devops Engineer</h2>
+              <p className="text-gray-700 mb-6">Turning concepts into fully functional, engaging, and efficient applications.</p>
               
               <div className="flex gap-3 mb-6">
                 <a href="mailto:aurjei.steven.carreon@gmail.com" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
@@ -68,7 +68,7 @@ export default function AboutPage() {
                 <a href="https://linkedin.com/in/rjcarreon" target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                   <Linkedin className="w-5 h-5 text-gray-700" />
                 </a>
-                <a href="/resume.pdf" target="_blank" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 rounded-lg transition-colors">
+                <a href="/resume.pdf" target="_blank" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 rounded-lg transition-colors text-gray-800 font-medium">
                   <Download className="w-4 h-4" />
                   DOWNLOAD MY CV
                 </a>
@@ -98,7 +98,7 @@ export default function AboutPage() {
 
         {/* Tech Stack Section */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-          <h3 className="text-lg font-semibold mb-4">Tech Stack</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-900">Tech Stack</h3>
           <div className="flex flex-wrap gap-4">
             {techIcons.map((tech, index) => (
               <div key={index} className="group relative">
@@ -116,8 +116,8 @@ export default function AboutPage() {
         {/* GitHub Contributions */}
         <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 mb-8">
           <div className="flex items-center gap-2 mb-4">
-            <Github className="w-5 h-5" />
-            <h3 className="text-lg font-semibold">GitHub</h3>
+            <Github className="w-5 h-5 text-gray-800" />
+            <h3 className="text-lg font-semibold text-gray-900">GitHub</h3>
           </div>
           <Image 
             src="http://ghchart.rshah.org/Jeeeiiiiiii" 
@@ -130,12 +130,27 @@ export default function AboutPage() {
 
         {/* Experience Section */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-          <h3 className="text-lg font-semibold mb-4">Experience</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-900">Experience</h3>
           <div className="space-y-4">
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <h4 className="font-semibold">QA Tester Intern</h4>
+                  <h4 className="font-semibold text-gray-800">Backend DevOps Trainee</h4>
+                  <p className="text-blue-600 text-sm">Hivelabs Technologies Corp.</p>
+                </div>
+                <span className="text-sm text-gray-500">May 2025 - July 2025</span>
+              </div>
+              <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
+                <li>Actively involved in full-stack development for an eCommerce application</li>
+                <li>Assisted in frontend development tasks including UI fixes and layout enhancements using Flexbox</li>
+                <li>Currently working on third-party logistics integration with Lalamove and Gogo Express APIs</li>
+                <li>Currently working on setting up a CI/CD pipeline using Bitbucket Pipelines to streamline deployment and improve development workflow</li>
+              </ul>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex justify-between items-start mb-2">
+                <div>
+                  <h4 className="font-semibold text-gray-800">QA Tester Intern</h4>
                   <p className="text-blue-600 text-sm">Hivelabs Technologies Corp.</p>
                 </div>
                 <span className="text-sm text-gray-500">February 2025 - April 2025</span>
@@ -151,7 +166,7 @@ export default function AboutPage() {
         
         {/* Certifications Section */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-          <h3 className="text-lg font-semibold mb-4">Certifications</h3>
+          <h3 className="text-lg font-semibold mb-4 text-gray-900">Certifications</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {certifications.map((cert) => (
               <a 
@@ -169,9 +184,9 @@ export default function AboutPage() {
                     className="object-contain p-2"
                   />
                 </div>
-                <h4 className="font-semibold text-sm mb-2">{cert.name}</h4>
-                <p className="text-xs text-gray-600 mb-1">{cert.issuer}</p>
-                <p className="text-xs text-gray-500">{cert.date}</p>
+                <h4 className="font-semibold text-sm mb-2 text-gray-800">{cert.name}</h4>
+                <p className="text-xs text-gray-700 mb-1">{cert.issuer}</p>
+                <p className="text-xs text-gray-600">{cert.date}</p>
               </a>
             ))}
           </div>

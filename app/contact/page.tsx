@@ -15,8 +15,8 @@ export default function ContactPage() {
       <div className="max-w-7xl mx-auto p-8">
         {/* Header Section */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Get In Touch</h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <h1 className="text-4xl font-bold mb-4 text-gray-900">Get In Touch</h1>
+          <p className="text-xl text-gray-700 max-w-3xl mx-auto">
             Have a project in mind or want to discuss a potential collaboration? I&apos;d love to hear from you!
           </p>
         </div>
@@ -24,10 +24,10 @@ export default function ContactPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Contact Form */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-            <h2 className="text-2xl font-semibold mb-6">Send Me a Message</h2>
+            <h2 className="text-2xl font-semibold mb-6 text-gray-900">Send Me a Message</h2>
             <form className="space-y-6">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-800 mb-2">
                   Your Name
                 </label>
                 <input
@@ -40,7 +40,7 @@ export default function ContactPage() {
                 />
               </div>
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-800 mb-2">
                   Email Address
                 </label>
                 <input
@@ -53,7 +53,7 @@ export default function ContactPage() {
                 />
               </div>
               <div>
-                <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="subject" className="block text-sm font-medium text-gray-800 mb-2">
                   Subject
                 </label>
                 <input
@@ -66,7 +66,7 @@ export default function ContactPage() {
                 />
               </div>
               <div>
-                <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="message" className="block text-sm font-medium text-gray-800 mb-2">
                   Message
                 </label>
                 <textarea
@@ -92,7 +92,7 @@ export default function ContactPage() {
           {/* Contact Information */}
           <div className="space-y-8">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-              <h2 className="text-2xl font-semibold mb-6">Contact Information</h2>
+              <h2 className="text-2xl font-semibold mb-6 text-gray-900">Contact Information</h2>
               <div className="space-y-6">
                 <div className="flex items-start">
                   <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -125,7 +125,7 @@ export default function ContactPage() {
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-              <h2 className="text-2xl font-semibold mb-6">Connect With Me</h2>
+              <h2 className="text-2xl font-semibold mb-6 text-gray-900">Connect With Me</h2>
               <div className="flex space-x-4">
                 <a
                   href="https://github.com/Jeeeiiiiiii"
@@ -167,7 +167,7 @@ export default function ContactPage() {
         {/* Map Section */}
         <div className="mt-12">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-            <h2 className="text-2xl font-semibold mb-6">Find Me</h2>
+            <h2 className="text-2xl font-semibold mb-6 text-gray-900">Find Me</h2>
             <div className="relative h-96 rounded-lg overflow-hidden">
               {!isLoaded ? (
                 <div className="h-full w-full flex items-center justify-center bg-gray-100">

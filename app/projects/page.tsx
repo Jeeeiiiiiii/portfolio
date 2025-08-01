@@ -91,7 +91,7 @@ export default function ProjectsPage() {
           <div className="bg-gray-100 border-b border-gray-200 px-4 py-3 rounded-t-lg">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <h3 className="font-semibold">Portfolio Browser</h3>
+                <h3 className="font-semibold text-gray-900">Portfolio Browser</h3>
               </div>
               <div className="flex items-center gap-2">
                 <button className="hover:bg-gray-200 p-1 rounded">
@@ -111,7 +111,7 @@ export default function ProjectsPage() {
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-2xl font-bold mb-2">{selectedProject.title}</h2>
+                <h2 className="text-2xl font-bold mb-2 text-gray-900">{selectedProject.title}</h2>
                 <a href={selectedProject.demoUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 text-sm flex items-center gap-1">
                   {selectedProject.url}
                   <ExternalLink className="w-3 h-3" />
@@ -157,8 +157,8 @@ export default function ProjectsPage() {
                     selectedProject.id === item.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
                   }`}
                 >
-                  <h4 className="font-semibold text-sm mb-2">{item.title}</h4>
-                  <p className="text-xs text-gray-600 mb-3">{item.url}</p>
+                  <h4 className="font-semibold text-sm mb-2 text-gray-800">{item.title}</h4>
+                  <p className="text-xs text-gray-700 mb-3">{item.url}</p>
                   <div className="h-32 bg-gray-200 rounded mb-3 overflow-hidden">
                     <Image 
                       src={item.image} 
@@ -186,7 +186,7 @@ export default function ProjectsPage() {
             <div className="bg-gray-50 rounded-lg p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">{selectedProject.title}</h3>
+                  <h3 className="text-lg font-semibold mb-2 text-gray-900">{selectedProject.title}</h3>
                   <div className="flex gap-2 mb-4">
                     <a 
                       href={selectedProject.demoUrl} 
@@ -208,12 +208,12 @@ export default function ProjectsPage() {
                 </div>
               </div>
               
-              <p className="text-gray-700 leading-relaxed mb-4">
+              <p className="text-gray-800 leading-relaxed mb-4">
                 {selectedProject.description}
               </p>
               
               <div className="flex flex-wrap gap-2">
-                <span className="text-sm font-medium text-gray-600 mr-2">Technologies:</span>
+                <span className="text-sm font-medium text-gray-800 mr-2">Technologies:</span>
                 {selectedProject.technologies.map((tech, index) => (
                   <span key={index} className="text-xs bg-white px-2 py-1 rounded border">
                     {tech}

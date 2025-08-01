@@ -104,8 +104,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
           <div className="p-8 border-b border-gray-200">
             <div className="flex justify-between items-start mb-6">
               <div className="flex-1">
-                <h1 className="text-3xl font-bold mb-4">{project.title}</h1>
-                <p className="text-gray-600 mb-4">{project.description}</p>
+                <h1 className="text-3xl font-bold mb-4 text-gray-900">{project.title}</h1>
+                <p className="text-gray-700 mb-4">{project.description}</p>
                 
                 <div className="flex gap-4 mb-6">
                   <a 
@@ -154,8 +154,8 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
             {/* Project Details */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2">
-                <h2 className="text-xl font-semibold mb-4">Project Overview</h2>
-                <div className="prose max-w-none text-gray-700">
+                <h2 className="text-xl font-semibold mb-4 text-gray-900">Project Overview</h2>
+                <div className="prose max-w-none text-gray-800">
                   {project.longDescription.split('\n').map((paragraph, index) => (
                     paragraph.trim() && (
                       <p key={index} className="mb-4 leading-relaxed">
@@ -167,7 +167,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
               </div>
               
               <div className="bg-gray-50 p-6 rounded-lg h-fit">
-                <h3 className="text-lg font-semibold mb-4">Project Details</h3>
+                <h3 className="text-lg font-semibold mb-4 text-gray-900">Project Details</h3>
                 <div className="space-y-4">
                   <div>
                     <h4 className="font-medium text-gray-900 mb-2">Technologies Used</h4>
@@ -210,7 +210,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
             {/* Additional Images */}
             {project.additionalImages && project.additionalImages.length > 0 && (
               <div className="mt-12">
-                <h2 className="text-xl font-semibold mb-6">Project Gallery</h2>
+                <h2 className="text-xl font-semibold mb-6 text-gray-900">Project Gallery</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {project.additionalImages.map((image, index) => (
                     <div key={index} className="relative h-48 rounded-lg overflow-hidden bg-gray-100">
