@@ -204,28 +204,28 @@ Setup (you): create a Discord server (or reuse one), Channel Settings → Integr
 
 Each item is one focused work session. Owner column: **me** = Claude writes code; **you** = manual GitHub/Vercel/Cloudflare setup; **both** = pair.
 
-| #  | Task                                                              | Owner | Depends on |
-|----|-------------------------------------------------------------------|-------|------------|
-| 1  | Create `staging` branch from `main`, push                         | you   | —          |
-| 2  | Vercel: map `staging.<domain>` to `staging` branch                | you   | 1          |
-| 3  | Add `.github/CODEOWNERS` + branch protection on `main`            | you   | —          |
-| 4  | Add `.github/workflows/ci.yml` (lint+typecheck+build)             | me    | —          |
-| 5  | Create GitHub App, install on repo, save credentials              | you   | —          |
-| 6  | Cloudflare Turnstile site, save site key + secret                 | you   | —          |
-| 7  | Upstash Redis DB, save REST URL + token                           | you   | —          |
-| 8  | Add Vercel env vars (App key, Turnstile, Upstash) for staging+prod | you  | 5,6,7      |
-| 9  | `lib/visitors-schema.ts` + `content/visitors.json` seed           | me    | —          |
-| 10 | `lib/github.ts` (Octokit App auth + branch/commit/PR)             | me    | 9          |
-| 11 | `lib/turnstile.ts`, `lib/ratelimit.ts`, `lib/moderate.ts`         | me    | 9          |
-| 12 | `app/api/visitors/submit/route.ts`                                | me    | 10,11      |
-| 13 | `app/api/visitors/status/route.ts`                                | me    | 10         |
-| 14 | `app/visitors/page.tsx` (read JSON, render grid)                  | me    | 9          |
-| 15 | `app/visitors/submit-form.tsx` (modal + Turnstile)                | me    | 9          |
-| 16 | `.github/workflows/visitor-pr-guard.yml` (only allowed paths)     | me    | —          |
-| 17 | `.github/workflows/stale-visitor-prs.yml`                         | me    | —          |
-| 18 | Webhook handler + Discord forwarder                               | me    | 5          |
-| 19 | Manual end-to-end test on staging (submit → PR → preview → merge) | both  | all above  |
-| 20 | Writeup: blog post explaining the architecture                    | you   | 19         |
+| #  | Task                                                              | Owner | Depends on | Status |
+|----|-------------------------------------------------------------------|-------|------------|--------|
+| 1  | Create `staging` branch from `main`, push                         | you   | —          | ✅ done |
+| 2  | Vercel: map `staging.<domain>` to `staging` branch                | you   | 1          | ⏳ todo (v1 uses auto Vercel subdomain — only needed when custom domain bought) |
+| 3  | Add `.github/CODEOWNERS` + branch protection on `main`            | you   | 4 merged   | ⏳ todo |
+| 4  | Add `.github/workflows/ci.yml` (lint+typecheck+build)             | me    | —          | ✅ done (in PR `setup/foundations`) |
+| 5  | Create GitHub App, install on repo, save credentials              | you   | —          | ⏳ todo |
+| 6  | Cloudflare Turnstile site, save site key + secret                 | you   | —          | ⏳ todo |
+| 7  | Upstash Redis DB, save REST URL + token                           | you   | —          | ⏳ todo |
+| 8  | Add Vercel env vars (App key, Turnstile, Upstash) for staging+prod | you  | 5,6,7      | ⏳ todo |
+| 9  | `lib/visitors-schema.ts` + `content/visitors.json` seed           | me    | —          | ✅ done (in PR `setup/foundations`) |
+| 10 | `lib/github.ts` (Octokit App auth + branch/commit/PR)             | me    | 9          | ⏳ blocked on 5 |
+| 11 | `lib/turnstile.ts`, `lib/ratelimit.ts`, `lib/moderate.ts`         | me    | 9          | ⏳ blocked on 6,7 |
+| 12 | `app/api/visitors/submit/route.ts`                                | me    | 10,11      | ⏳ blocked |
+| 13 | `app/api/visitors/status/route.ts`                                | me    | 10         | ⏳ blocked |
+| 14 | `app/visitors/page.tsx` (read JSON, render grid)                  | me    | 9          | ⏳ ready (can start anytime) |
+| 15 | `app/visitors/submit-form.tsx` (modal + Turnstile)                | me    | 9          | ⏳ blocked on 6 (Turnstile site key) |
+| 16 | `.github/workflows/visitor-pr-guard.yml` (only allowed paths)     | me    | —          | ✅ done (in PR `setup/foundations`) |
+| 17 | `.github/workflows/stale-visitor-prs.yml`                         | me    | —          | ✅ done (in PR `setup/foundations`) |
+| 18 | Webhook handler + Discord forwarder                               | me    | 5          | ⏳ blocked on 5 |
+| 19 | Manual end-to-end test on staging (submit → PR → preview → merge) | both  | all above  | ⏳ todo |
+| 20 | Writeup: blog post explaining the architecture                    | you   | 19         | ⏳ todo |
 
 ---
 
@@ -251,7 +251,57 @@ Locked 2026-05-11. Revisit if any of these become a problem during build.
 
 ---
 
-## 13. Done criteria for v1
+## 13. Progress log
+
+Append-only running log so the next session can pick up cold.
+
+### Session 1 — 2026-05-11 (plan + foundations)
+
+**What happened:**
+- Aligned on the GitOps-for-content pattern (visitor edits → API → GitHub App → PR → review → merge → deploy).
+- Locked the four key decisions (§12): Vercel free subdomains v1, Discord webhook, read-only `/visitors` on prod + editable on staging, auto-PR every submission (no moderation queue).
+- Chose "Editable card on an About visitors page" as the sandbox feature.
+- Wrote this plan doc.
+
+**Branches now on origin:**
+- `main` → has plan doc at `docs/playground-plan.md` (commit `e899018`)
+- `staging` → fast-forwarded to match `main` (auto-deploys to its Vercel preview URL)
+- `setup/foundations` → has the CI + guard + stale + schema + seed files; **PR pending review**
+
+**PR to open/merge before next session:**
+- `setup/foundations` → `main`
+- URL: https://github.com/Jeeeiiiiiii/portfolio/pull/new/setup/foundations
+- Contents: `.github/workflows/{ci,visitor-pr-guard,stale-visitor-prs}.yml`, `content/visitors.json`, `lib/visitors-schema.ts`, `zod` dep
+- Local typecheck passed; CI will run for the first time on PR open.
+
+**Your homework before session 2** (in rough order):
+1. Open and merge the `setup/foundations` PR (watch CI go green first).
+2. Set up **branch protection** on `main`: require PR, require CODEOWNERS review, require `Lint, typecheck, build` status check, disallow force pushes. (Plan task #3.)
+3. Create **CODEOWNERS** file on `main` mapping everything to your GitHub user. Can be a separate small PR from a branch (proves the workflow).
+4. Create a **GitHub App** (plan task #5):
+   - Settings → Developer settings → GitHub Apps → New
+   - Permissions: `contents: write`, `pull-requests: write`. Nothing else.
+   - Install on `Jeeeiiiiiii/portfolio` only.
+   - Save: App ID, Installation ID, private key (.pem file contents).
+5. Create **Cloudflare Turnstile** site (plan task #6) — free. Save site key + secret key.
+6. Create **Upstash Redis** DB (plan task #7) — free tier. Save REST URL + REST token.
+7. Add all of the above as **Vercel env vars** (plan task #8) for both Production and Preview scopes:
+   - `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`, `GITHUB_APP_PRIVATE_KEY`
+   - `TURNSTILE_SITE_KEY` (public — also expose as `NEXT_PUBLIC_TURNSTILE_SITE_KEY`), `TURNSTILE_SECRET_KEY`
+   - `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`
+   - `DISCORD_WEBHOOK_URL`, `GITHUB_WEBHOOK_SECRET` (any long random string)
+
+**What I'll pick up in session 2:**
+Depends on what's done. With env vars in place:
+- Task #10: `lib/github.ts` (Octokit App auth + branch/commit/PR helpers, path allowlist enforcement)
+- Task #11: `lib/turnstile.ts`, `lib/ratelimit.ts`, `lib/moderate.ts`
+- Task #14: `app/visitors/page.tsx` (read-only grid — can start regardless, only needs the seed JSON)
+
+If env vars aren't ready yet, I can still ship task #14 (read-only grid page) since it only depends on `content/visitors.json` which already exists.
+
+---
+
+## 14. Done criteria for v1
 
 - Visitor on staging can submit a card → PR appears on GitHub → preview URL works → merging deploys to prod.
 - All §8 security boxes checked.
