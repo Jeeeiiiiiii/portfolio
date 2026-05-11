@@ -1,0 +1,27 @@
+name: Close stale visitor PRs
+
+on:
+  schedule:
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/stale@v9
+        with:
+          only-pr-labels: visitor-submission
+          days-before-pr-stale: 5
+          days-before-pr-close: 2
+          stale-pr-message: >
+            This visitor submission has been idle for 5 days. It will be closed
+            automatically in 2 days unless there is new activity.
+          close-pr-message: >
+            Closed automatically after 7 days of inactivity. Feel free to
+            resubmit from the staging site.
+          stale-pr-label: stale
+          exempt-pr-labels: keep-open
+          operations-per-run: 50

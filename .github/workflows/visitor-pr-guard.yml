@@ -1,0 +1,30 @@
+name: Visitor PR Guard
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  enforce-path-allowlist:
+    name: Only content/visitors.json may change
+    if: startsWith(github.head_ref, 'visitor/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compare against base
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          changed=$(git diff --name-only "$base" "$head")
+          echo "Changed files:"
+          printf '%s\n' "$changed"
+          allowed="content/visitors.json"
+          bad=$(printf '%s\n' "$changed" | grep -v -x "$allowed" || true)
+          if [ -n "$bad" ]; then
+            echo "::error::Visitor PRs may only modify $allowed. Disallowed changes:"
+            printf '%s\n' "$bad"
+            exit 1
+          fi
