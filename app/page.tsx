@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { SiNextdotjs, SiTypescript, SiTailwindcss, SiAmazonwebservices, SiDocker, SiKubernetes, SiTerraform, SiPrometheus, SiGrafana } from 'react-icons/si';
-import { Mail, Github, Linkedin, Download } from 'lucide-react';
 import Footer from '@/components/Footer';
 
 export const metadata = {
@@ -9,7 +8,6 @@ export const metadata = {
   description: "Learn more about my background, skills, and experience in Devops Engineering",
 };
 
-// Sample certification data
 const certifications = [
   {
     id: 1,
@@ -30,169 +28,160 @@ const certifications = [
 ];
 
 const techIcons = [
-  { name: 'Next.js', icon: <SiNextdotjs className="w-6 h-6 text-gray-600 hover:text-black transition-colors" /> },
-  { name: 'TypeScript', icon: <SiTypescript className="w-6 h-6 text-gray-600 hover:text-blue-600 transition-colors" /> },
-  { name: 'Tailwind CSS', icon: <SiTailwindcss className="w-6 h-6 text-gray-600 hover:text-sky-400 transition-colors" /> },
-  { name: 'AWS', icon: <SiAmazonwebservices className="w-6 h-6 text-gray-600 hover:text-orange-500 transition-colors" /> },
-  { name: 'Docker', icon: <SiDocker className="w-6 h-6 text-gray-600 hover:text-blue-500 transition-colors" /> },
-  { name: 'Kubernetes', icon: <SiKubernetes className="w-6 h-6 text-gray-600 hover:text-blue-600 transition-colors" /> },
-  { name: 'Terraform', icon: <SiTerraform className="w-6 h-6 text-gray-600 hover:text-purple-600 transition-colors" /> },
-  { name: 'Prometheus', icon: <SiPrometheus className="w-6 h-6 text-gray-600 hover:text-orange-600 transition-colors" /> },
-  { name: 'Grafana', icon: <SiGrafana className="w-6 h-6 text-gray-600 hover:text-yellow-500 transition-colors" /> },
+  { name: 'Next.js', icon: SiNextdotjs },
+  { name: 'TypeScript', icon: SiTypescript },
+  { name: 'Tailwind CSS', icon: SiTailwindcss },
+  { name: 'AWS', icon: SiAmazonwebservices },
+  { name: 'Docker', icon: SiDocker },
+  { name: 'Kubernetes', icon: SiKubernetes },
+  { name: 'Terraform', icon: SiTerraform },
+  { name: 'Prometheus', icon: SiPrometheus },
+  { name: 'Grafana', icon: SiGrafana },
+];
+
+const experience = [
+  {
+    title: "Backend DevOps Trainee",
+    company: "Hivelabs Technologies Corp.",
+    period: "May 2025 — Jul 2025",
+    bullets: [
+      "Actively involved in full-stack development for an eCommerce application",
+      "Assisted in frontend development tasks including UI fixes and layout enhancements using Flexbox",
+      "Third-party logistics integration with Lalamove and Gogo Express APIs",
+      "CI/CD pipeline with Bitbucket Pipelines to streamline deployment and improve development workflow",
+    ],
+  },
+  {
+    title: "QA Tester Intern",
+    company: "Hivelabs Technologies Corp.",
+    period: "Feb 2025 — Apr 2025",
+    bullets: [
+      "Monitored system performance and analyzed server logs to identify and troubleshoot user-reported issues",
+      "Supported the validation of authentication systems and session handling, ensuring secure access and proper timeout settings",
+      "System monitoring and issue tracking",
+    ],
+  },
 ];
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto p-8">
-        {/* Header Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                Cavite, Philippines
+    <div className="min-h-screen">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-14 stagger">
+        {/* Hero */}
+        <section className="relative mb-14">
+          <div className="halftone absolute -top-8 -right-4 w-48 h-40 pointer-events-none" aria-hidden />
+          <div className="flex items-start justify-between gap-6">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <span className="status-dot inline-block w-1.5 h-1.5 rounded-full bg-ink" />
+                <span className="micro">cavite, philippines</span>
               </div>
-              
-              <h1 className="text-4xl font-bold mb-2 text-gray-900">Steven Carreon</h1>
-              <h2 className="text-xl text-gray-800 mb-4">Cloud || Devops Engineer</h2>
-              <p className="text-gray-700 mb-6">Turning concepts into fully functional, engaging, and efficient applications.</p>
-              
-              <div className="flex gap-3 mb-6">
-                <a href="mailto:aurjei.steven.carreon@gmail.com" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <Mail className="w-5 h-5 text-gray-700" />
+              <h1 className="page-title mb-3">steven carreon</h1>
+              <p className="micro !text-[11px] mb-4">cloud / devops engineer</p>
+              <p className="text-gray-500 mb-6 max-w-md">
+                Turning concepts into fully functional, engaging, and efficient applications.
+              </p>
+              <div className="flex flex-wrap items-center gap-5">
+                <Link
+                  href="/contact"
+                  className="bg-ink text-background text-xs px-4 py-2 rounded-md hover:opacity-90 transition-opacity duration-200"
+                >
+                  contact me
+                </Link>
+                <a href="/resume.pdf" target="_blank" className="micro hover:text-ink transition-colors duration-200">
+                  download cv ↗
                 </a>
-                <a href="https://github.com/Jeeeiiiiiii" target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <Github className="w-5 h-5 text-gray-700" />
+                <a href="https://github.com/Jeeeiiiiiii" target="_blank" rel="noopener noreferrer" className="micro hover:text-ink transition-colors duration-200">
+                  github ↗
                 </a>
-                <a href="https://linkedin.com/in/rjcarreon" target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <Linkedin className="w-5 h-5 text-gray-700" />
-                </a>
-                <a href="/resume.pdf" target="_blank" className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 rounded-lg transition-colors text-gray-800 font-medium">
-                  <Download className="w-4 h-4" />
-                  DOWNLOAD MY CV
+                <a href="https://linkedin.com/in/rjcarreon" target="_blank" rel="noopener noreferrer" className="micro hover:text-ink transition-colors duration-200">
+                  linkedin ↗
                 </a>
               </div>
-              
-              <Link href="/contact" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                CONTACT ME
-              </Link>
             </div>
-            
-            {/* Avatar */}
-            <div className="w-80 h-80 relative">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-64 h-64 relative rounded-full overflow-hidden">
-                  <Image 
-                    src="/profile.png" 
-                    alt="Steven Carreon" 
-                    fill
-                    className="object-cover"
-                    priority
-                  />
-                </div>
+            <div className="relative w-32 h-32 sm:w-40 sm:h-40 shrink-0">
+              <div className="relative w-full h-full rounded-full overflow-hidden grayscale">
+                <Image src="/profile.png" alt="Steven Carreon" fill className="object-cover" priority />
               </div>
+              <div className="halftone-bottom absolute -bottom-3 inset-x-0 h-10 pointer-events-none" aria-hidden />
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Tech Stack Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-          <h3 className="text-lg font-semibold mb-4 text-gray-900">Tech Stack</h3>
-          <div className="flex flex-wrap gap-4">
-            {techIcons.map((tech, index) => (
-              <div key={index} className="group relative">
-                <div className="p-3 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer text-gray-600 hover:text-gray-900">
-                  {tech.icon}
-                </div>
-                <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                  {tech.name}
-                </span>
+        {/* Stack */}
+        <section className="mb-14">
+          <h2 className="section-label mb-5">01 — stack</h2>
+          <div className="flex flex-wrap gap-2 border-y border-gray-200 py-4">
+            {techIcons.map((tech) => (
+              <div
+                key={tech.name}
+                className="group flex items-center gap-2 px-3 py-2 rounded-lg text-gray-400 hover:text-ink transition-colors duration-200"
+              >
+                <tech.icon className="w-5 h-5" />
+                <span className="micro group-hover:text-ink transition-colors duration-200">{tech.name}</span>
               </div>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* GitHub Contributions */}
-        <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <Github className="w-5 h-5 text-gray-800" />
-            <h3 className="text-lg font-semibold text-gray-900">GitHub</h3>
+        {/* GitHub */}
+        <section className="mb-14">
+          <h2 className="section-label mb-5">02 — github</h2>
+          <div className="border border-gray-200 rounded-2xl p-5 bg-gray-50 shadow-[var(--shadow-card)]">
+            <Image
+              src="http://ghchart.rshah.org/Jeeeiiiiiii"
+              alt="Jeeeiiiiiii's GitHub contribution chart"
+              width={800}
+              height={128}
+              className="w-full h-28 object-contain grayscale dark:invert"
+            />
+            <p className="micro mt-3">contribution graph — github.com/jeeeiiiiiii</p>
           </div>
-          <Image 
-            src="http://ghchart.rshah.org/Jeeeiiiiiii" 
-            alt="Jeeeiiiiiii's Github chart" 
-            width={800}
-            height={128}
-            className="w-full h-32 object-contain"
-          />
-        </div>
+        </section>
 
-        {/* Experience Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-          <h3 className="text-lg font-semibold mb-4 text-gray-900">Experience</h3>
-          <div className="space-y-4">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h4 className="font-semibold text-gray-800">Backend DevOps Trainee</h4>
-                  <p className="text-blue-600 text-sm">Hivelabs Technologies Corp.</p>
+        {/* Experience */}
+        <section className="mb-14">
+          <h2 className="section-label mb-5">03 — experience</h2>
+          <div className="divide-y divide-gray-200 border-y border-gray-200">
+            {experience.map((job) => (
+              <div key={job.title} className="py-6">
+                <div className="flex justify-between items-baseline gap-4 mb-1">
+                  <h3 className="font-semibold tracking-tight">{job.title}</h3>
+                  <span className="micro shrink-0">{job.period}</span>
                 </div>
-                <span className="text-sm text-gray-500">May 2025 - July 2025</span>
+                <p className="micro mb-3">{job.company}</p>
+                <ul className="space-y-1.5 text-[13px] text-gray-500 list-disc pl-5">
+                  {job.bullets.map((b) => (
+                    <li key={b}>{b}</li>
+                  ))}
+                </ul>
               </div>
-              <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
-                <li>Actively involved in full-stack development for an eCommerce application</li>
-                <li>Assisted in frontend development tasks including UI fixes and layout enhancements using Flexbox</li>
-                <li>Currently working on third-party logistics integration with Lalamove and Gogo Express APIs</li>
-                <li>Currently working on setting up a CI/CD pipeline using Bitbucket Pipelines to streamline deployment and improve development workflow</li>
-              </ul>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h4 className="font-semibold text-gray-800">QA Tester Intern</h4>
-                  <p className="text-blue-600 text-sm">Hivelabs Technologies Corp.</p>
-                </div>
-                <span className="text-sm text-gray-500">February 2025 - April 2025</span>
-              </div>
-              <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
-                <li>Monitored system performance and analyzed server logs to identify and troubleshoot user-reported issues</li>
-                <li>Supported the validation of authentication systems and session handling, ensuring secure access and proper timeout settings</li>
-                <li>System Monitoring and Issue Tracking</li>
-              </ul>
-            </div>
+            ))}
           </div>
-        </div>
-        
-        {/* Certifications Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-          <h3 className="text-lg font-semibold mb-4 text-gray-900">Certifications</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        </section>
+
+        {/* Certifications */}
+        <section>
+          <h2 className="section-label mb-5">04 — certifications</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {certifications.map((cert) => (
-              <a 
-                key={cert.id} 
-                href={cert.url} 
-                target="_blank" 
+              <a
+                key={cert.id}
+                href={cert.url}
+                target="_blank"
                 rel="noopener noreferrer"
-                className="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                className="group border border-gray-200 rounded-2xl p-5 bg-gray-50 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-300"
               >
-                <div className="relative h-32 bg-white rounded mb-3 overflow-hidden">
-                  <Image 
-                    src={cert.image} 
-                    alt={cert.name} 
-                    fill
-                    className="object-contain p-2"
-                  />
+                <div className="relative h-28 bg-background border border-gray-200 rounded-[10px] mb-4 overflow-hidden">
+                  <Image src={cert.image} alt={cert.name} fill className="object-contain p-2 grayscale group-hover:grayscale-0 transition-all duration-500" />
                 </div>
-                <h4 className="font-semibold text-sm mb-2 text-gray-800">{cert.name}</h4>
-                <p className="text-xs text-gray-700 mb-1">{cert.issuer}</p>
-                <p className="text-xs text-gray-600">{cert.date}</p>
+                <h3 className="text-[13px] font-semibold tracking-tight mb-1">{cert.name}</h3>
+                <p className="micro">{cert.issuer} · {cert.date}</p>
               </a>
             ))}
           </div>
-        </div>
+        </section>
       </div>
-      
       <Footer />
     </div>
   );

@@ -29,76 +29,63 @@ const blogPosts = [
 
 export default function BlogPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto p-8">
-        {/* Blog Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4 text-gray-900">Blog</h1>
-          <p className="text-xl text-gray-700">Latest thoughts, tutorials, and insights on web development and DevOps engineering</p>
-        </div>
-      
-        {/* Featured Post */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow mb-12">
-          <div className="md:flex">
-            <div className="md:w-1/2 relative h-64 md:h-auto">
-              <Image 
-                src={blogPosts[0].image}
-                alt={blogPosts[0].title}
-                fill
-                className="object-cover"
-              />
-            </div>
-            <div className="md:w-1/2 p-8">
-              <div className="text-sm text-gray-600 mb-2">{blogPosts[0].date}</div>
-              <h2 className="text-2xl font-bold mb-3 text-gray-900">{blogPosts[0].title}</h2>
-              <p className="text-gray-700 mb-4">{blogPosts[0].excerpt}</p>
-              <Link 
-                href={`/blog/${blogPosts[0].slug}`}
-                className="text-blue-600 hover:underline font-medium"
-              >
-                Read Full Article →
-              </Link>
-            </div>
+    <div className="min-h-screen">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-14 stagger">
+        <header className="relative mb-10">
+          <div className="halftone absolute -top-6 right-0 w-40 h-32 pointer-events-none" aria-hidden />
+          <h1 className="page-title mb-3">blog</h1>
+          <p className="micro">03 — notes on web development and devops</p>
+        </header>
+
+        {/* Featured post */}
+        <Link
+          href={`/blog/${blogPosts[0].slug}`}
+          className="group block border border-gray-200 rounded-2xl overflow-hidden bg-gray-50 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-300 mb-10"
+        >
+          <div className="relative h-52 overflow-hidden">
+            <Image
+              src={blogPosts[0].image}
+              alt={blogPosts[0].title}
+              fill
+              className="object-cover grayscale group-hover:grayscale-0 group-hover:scale-[1.04] transition-all duration-500"
+            />
+            <div className="halftone-bottom absolute inset-x-0 bottom-0 h-14 pointer-events-none" aria-hidden />
           </div>
-        </div>
-      
-        {/* Blog Posts Grid */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-          <h2 className="text-2xl font-bold mb-6 text-gray-900">Recent Articles</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="rounded-full bg-ink text-background px-2 py-px micro !text-[9px] !text-background">featured</span>
+              <span className="micro">{blogPosts[0].date}</span>
+            </div>
+            <h2 className="text-[1.3rem] font-semibold tracking-tight mb-2">{blogPosts[0].title}</h2>
+            <p className="text-[13px] text-gray-500 mb-3">{blogPosts[0].excerpt}</p>
+            <span className="micro group-hover:text-ink transition-colors duration-200">read article →</span>
+          </div>
+        </Link>
+
+        {/* Remaining posts */}
+        <section>
+          <h2 className="section-label mb-5">recent articles</h2>
+          <div className="divide-y divide-gray-200 border-y border-gray-200">
             {blogPosts.slice(1).map((post) => (
-              <div 
-                key={post.id}
-                className="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
-              >
-                <div className="relative h-48">
-                  <Image 
+              <Link key={post.id} href={`/blog/${post.slug}`} className="group flex gap-5 py-6">
+                <div className="relative w-28 h-20 shrink-0 rounded-[10px] overflow-hidden border border-gray-200">
+                  <Image
                     src={post.image}
                     alt={post.title}
                     fill
-                    className="object-cover"
+                    className="object-cover grayscale group-hover:grayscale-0 group-hover:scale-[1.04] transition-all duration-500"
                   />
                 </div>
-                <div className="p-6">
-                  <div className="text-sm text-gray-600 mb-2">{post.date}</div>
-                  <h3 className="font-bold mb-2 text-gray-800">{post.title}</h3>
-                  <p className="text-gray-700 text-sm mb-3 line-clamp-3">
-                    {post.excerpt}
-                  </p>
-                  <Link 
-                    href={`/blog/${post.slug}`}
-                    className="text-blue-600 text-sm hover:underline font-medium"
-                  >
-                    Read More →
-                  </Link>
+                <div>
+                  <span className="micro">{post.date}</span>
+                  <h3 className="text-[15px] font-semibold tracking-tight mt-1 mb-1">{post.title}</h3>
+                  <p className="text-[13px] text-gray-500 line-clamp-2">{post.excerpt}</p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
-        </div>
+        </section>
       </div>
-      
-      {/* Footer */}
       <Footer />
     </div>
   );

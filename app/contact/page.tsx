@@ -1,7 +1,23 @@
 "use client";
 import { useLoadScript, GoogleMap, Marker } from '@react-google-maps/api';
-import { Mail, Phone, MapPin, Github, Linkedin, Facebook, Instagram } from 'lucide-react';
+import { Mail, Phone, MapPin } from 'lucide-react';
 import Footer from '@/components/Footer';
+
+const contactDetails = [
+  { icon: Mail, label: 'email', value: 'aurjei.steven.carreon@gmail.com' },
+  { icon: Phone, label: 'phone', value: '+63 976-493-7713' },
+  { icon: MapPin, label: 'location', value: 'Cavite, PH' },
+];
+
+const socials = [
+  { label: 'github', href: 'https://github.com/Jeeeiiiiiii' },
+  { label: 'linkedin', href: 'https://www.linkedin.com/in/rjcarreon/' },
+  { label: 'facebook', href: 'https://www.facebook.com/Jeiiiiiii04/' },
+  { label: 'instagram', href: 'https://www.instagram.com/aurjeisteven/' },
+];
+
+const inputClass =
+  'w-full bg-gray-50 border border-gray-200 rounded-md px-3 py-2.5 font-mono text-[13px] text-ink placeholder:text-gray-400 focus:outline-none focus:border-gray-300 transition-colors duration-200';
 
 export default function ContactPage() {
   const { isLoaded } = useLoadScript({
@@ -11,184 +27,103 @@ export default function ContactPage() {
   const center = { lat: 14.431, lng: 120.967 }; // Coordinates for Cavite, PH
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto p-8">
-        {/* Header Section */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4 text-gray-900">Get In Touch</h1>
-          <p className="text-xl text-gray-700 max-w-3xl mx-auto">
-            Have a project in mind or want to discuss a potential collaboration? I&apos;d love to hear from you!
-          </p>
-        </div>
+    <div className="min-h-screen">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-14 stagger">
+        <header className="relative mb-10">
+          <div className="halftone absolute -top-6 right-0 w-40 h-32 pointer-events-none" aria-hidden />
+          <h1 className="page-title mb-3">contact</h1>
+          <p className="micro">05 — have a project in mind? i&apos;d love to hear from you</p>
+        </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Contact Form */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-            <h2 className="text-2xl font-semibold mb-6 text-gray-900">Send Me a Message</h2>
-            <form className="space-y-6">
+        {/* Form */}
+        <section className="mb-12">
+          <h2 className="section-label mb-5">01 — send a message</h2>
+          <form className="space-y-5 border border-gray-200 rounded-2xl p-6 bg-gray-50 shadow-[var(--shadow-card)]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-800 mb-2">
-                  Your Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  placeholder="John Doe"
-                  required
-                />
+                <label htmlFor="name" className="micro block mb-2">your name</label>
+                <input type="text" id="name" name="name" className={inputClass} placeholder="John Doe" required />
               </div>
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-800 mb-2">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  placeholder="john@example.com"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="subject" className="block text-sm font-medium text-gray-800 mb-2">
-                  Subject
-                </label>
-                <input
-                  type="text"
-                  id="subject"
-                  name="subject"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  placeholder="Project Inquiry"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="message" className="block text-sm font-medium text-gray-800 mb-2">
-                  Message
-                </label>
-                <textarea
-                  id="message"
-                  name="message"
-                  rows={5}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  placeholder="Tell me about your project or inquiry..."
-                  required
-                ></textarea>
-              </div>
-              <div>
-                <button
-                  type="submit"
-                  className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                >
-                  Send Message
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Contact Information */}
-          <div className="space-y-8">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-              <h2 className="text-2xl font-semibold mb-6 text-gray-900">Contact Information</h2>
-              <div className="space-y-6">
-                <div className="flex items-start">
-                  <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Mail className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-900 mb-1">Email</p>
-                    <p className="text-sm text-gray-600">aurjei.steve.carreon@gmail.com</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Phone className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-900 mb-1">Phone</p>
-                    <p className="text-sm text-gray-600">+63 976-493-7713</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <MapPin className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-900 mb-1">Location</p>
-                    <p className="text-sm text-gray-600">Cavite, PH</p>
-                  </div>
-                </div>
+                <label htmlFor="email" className="micro block mb-2">email address</label>
+                <input type="email" id="email" name="email" className={inputClass} placeholder="john@example.com" required />
               </div>
             </div>
+            <div>
+              <label htmlFor="subject" className="micro block mb-2">subject</label>
+              <input type="text" id="subject" name="subject" className={inputClass} placeholder="Project Inquiry" required />
+            </div>
+            <div>
+              <label htmlFor="message" className="micro block mb-2">message</label>
+              <textarea
+                id="message"
+                name="message"
+                rows={5}
+                className={inputClass}
+                placeholder="Tell me about your project or inquiry..."
+                required
+              ></textarea>
+            </div>
+            <button
+              type="submit"
+              className="bg-ink text-background text-xs px-5 py-2.5 rounded-md hover:opacity-90 transition-opacity duration-200"
+            >
+              send message
+            </button>
+          </form>
+        </section>
 
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-              <h2 className="text-2xl font-semibold mb-6 text-gray-900">Connect With Me</h2>
-              <div className="flex space-x-4">
-                <a
-                  href="https://github.com/Jeeeiiiiiii"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-3 bg-gray-100 rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-colors"
-                >
-                  <Github className="w-6 h-6" />
-                </a>
-                <a
-                  href="https://www.linkedin.com/in/rjcarreon/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-3 bg-gray-100 rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-colors"
-                >
-                  <Linkedin className="w-6 h-6" />
-                </a>
-                <a
-                  href="https://www.facebook.com/Jeiiiiiii04/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-3 bg-gray-100 rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-colors"
-                >
-                  <Facebook className="w-6 h-6" />
-                </a>
-                <a
-                  href="https://www.instagram.com/aurjeisteven/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="p-3 bg-gray-100 rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-colors"
-                >
-                  <Instagram className="w-6 h-6" />
-                </a>
+        {/* Details — hairline-divided cells */}
+        <section className="mb-12">
+          <h2 className="section-label mb-5">02 — details</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 border border-gray-200 rounded-2xl overflow-hidden">
+            {contactDetails.map((item, i) => (
+              <div
+                key={item.label}
+                className={`p-5 border-gray-200 ${i > 0 ? 'border-t sm:border-t-0 sm:border-l' : ''}`}
+              >
+                <item.icon className="w-4 h-4 text-gray-400 mb-3" />
+                <p className="micro mb-1">{item.label}</p>
+                <p className="text-[13px] text-gray-500 break-words">{item.value}</p>
               </div>
-            </div>
+            ))}
           </div>
-        </div>
+          <div className="flex gap-5 mt-5">
+            {socials.map((s) => (
+              <a
+                key={s.label}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="micro hover:text-ink transition-colors duration-200"
+              >
+                {s.label} ↗
+              </a>
+            ))}
+          </div>
+        </section>
 
-        {/* Map Section */}
-        <div className="mt-12">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-            <h2 className="text-2xl font-semibold mb-6 text-gray-900">Find Me</h2>
-            <div className="relative h-96 rounded-lg overflow-hidden">
-              {!isLoaded ? (
-                <div className="h-full w-full flex items-center justify-center bg-gray-100">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                </div>
-              ) : (
-                <GoogleMap
-                  zoom={13}
-                  center={center}
-                  mapContainerClassName="w-full h-full rounded-lg"
-                >
-                  <Marker position={center} />
-                </GoogleMap>
-              )}
-            </div>
+        {/* Map */}
+        <section>
+          <h2 className="section-label mb-5">03 — find me</h2>
+          <div className="relative h-80 rounded-2xl overflow-hidden border border-gray-200 grayscale">
+            {!isLoaded ? (
+              <div className="h-full w-full flex items-center justify-center bg-gray-50">
+                <span className="micro status-dot">loading map</span>
+              </div>
+            ) : (
+              <GoogleMap
+                zoom={13}
+                center={center}
+                mapContainerClassName="w-full h-full"
+              >
+                <Marker position={center} />
+              </GoogleMap>
+            )}
           </div>
-        </div>
+        </section>
       </div>
       <Footer />
     </div>
   );
-
-  
 }

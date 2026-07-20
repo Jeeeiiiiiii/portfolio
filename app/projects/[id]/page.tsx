@@ -87,174 +87,119 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
     notFound();
   }
   
+  const projectIndex = projects.findIndex(p => p.id === project.id);
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto p-8">
+    <div className="min-h-screen">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-14">
         {/* Back to Projects */}
         <div className="mb-8">
-          <Link href="/projects" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            Back to Portfolio Browser
+          <Link href="/projects" className="inline-flex items-center gap-2 micro hover:text-ink transition-colors duration-200">
+            <ArrowLeft className="w-3 h-3" />
+            back to projects
           </Link>
         </div>
 
-        {/* Project Detail Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          {/* Project Header */}
-          <div className="p-8 border-b border-gray-200">
-            <div className="flex justify-between items-start mb-6">
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold mb-4 text-gray-900">{project.title}</h1>
-                <p className="text-gray-700 mb-4">{project.description}</p>
-                
-                <div className="flex gap-4 mb-6">
-                  <a 
-                    href={project.demoUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Live Demo
-                  </a>
-                  <a 
-                    href={project.githubUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <Github className="w-4 h-4" />
-                    View Code
-                  </a>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {project.technologies.map((tech) => (
-                    <span key={tech} className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-md">
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
+        <header className="mb-8">
+          <h1 className="text-[1.6rem] font-semibold tracking-tight mb-3">{project.title}</h1>
+          <p className="text-gray-500 mb-5">{project.description}</p>
+          <div className="flex flex-wrap items-center gap-5 mb-5">
+            <a
+              href={project.demoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-ink text-background text-xs px-4 py-2 rounded-md hover:opacity-90 transition-opacity duration-200"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              live demo
+            </a>
+            <a
+              href={project.githubUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 micro hover:text-ink transition-colors duration-200"
+            >
+              <Github className="w-3.5 h-3.5" />
+              view code ↗
+            </a>
           </div>
+          <div className="flex flex-wrap gap-1.5">
+            {project.technologies.map((tech) => (
+              <span key={tech} className="rounded-full border border-gray-300 px-2 py-px micro !text-[9px]">
+                {tech}
+              </span>
+            ))}
+          </div>
+        </header>
 
-          {/* Main Project Image */}
-          <div className="p-8">
-            <div className="relative h-96 mb-8 rounded-lg overflow-hidden bg-gray-100">
-              <Image 
-                src={project.image} 
-                alt={project.title} 
-                fill
-                className="object-cover"
-                priority
-              />
+        {/* Main image dissolving into halftone dots */}
+        <div className="relative h-72 mb-10 rounded-2xl overflow-hidden border border-gray-200">
+          <Image
+            src={project.image}
+            alt={project.title}
+            fill
+            className="object-cover grayscale"
+            priority
+          />
+          <div className="halftone-bottom absolute inset-x-0 bottom-0 h-16 pointer-events-none" aria-hidden />
+        </div>
+
+        {/* Overview */}
+        <section className="mb-10">
+          <h2 className="section-label mb-5">01 — overview</h2>
+          <div className="max-w-none text-gray-500 text-[15px]">
+            {project.longDescription.split('\n').map((paragraph, index) => (
+              paragraph.trim() && (
+                <p key={index} className="mb-4 leading-relaxed">
+                  {paragraph.trim()}
+                </p>
+              )
+            ))}
+          </div>
+        </section>
+
+        {/* Gallery */}
+        {project.additionalImages && project.additionalImages.length > 0 && (
+          <section className="mb-10">
+            <h2 className="section-label mb-5">02 — gallery</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+              {project.additionalImages.map((image, index) => (
+                <div key={index} className="relative h-36 rounded-[10px] overflow-hidden border border-gray-200 bg-gray-50">
+                  <Image
+                    src={image}
+                    alt={`${project.title} screenshot ${index + 1}`}
+                    fill
+                    className="object-cover grayscale hover:grayscale-0 hover:scale-[1.04] transition-all duration-500"
+                  />
+                </div>
+              ))}
             </div>
+          </section>
+        )}
 
-            {/* Project Details */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2">
-                <h2 className="text-xl font-semibold mb-4 text-gray-900">Project Overview</h2>
-                <div className="prose max-w-none text-gray-800">
-                  {project.longDescription.split('\n').map((paragraph, index) => (
-                    paragraph.trim() && (
-                      <p key={index} className="mb-4 leading-relaxed">
-                        {paragraph.trim()}
-                      </p>
-                    )
-                  ))}
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 p-6 rounded-lg h-fit">
-                <h3 className="text-lg font-semibold mb-4 text-gray-900">Project Details</h3>
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Technologies Used</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {project.technologies.map((tech) => (
-                        <span key={tech} className="px-2 py-1 bg-white text-gray-600 text-xs rounded border">
-                          {tech}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">Links</h4>
-                    <div className="space-y-2">
-                      <a 
-                        href={project.demoUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700"
-                      >
-                        <ExternalLink className="w-3 h-3" />
-                        Live Demo
-                      </a>
-                      <a 
-                        href={project.githubUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
-                      >
-                        <Github className="w-3 h-3" />
-                        Source Code
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Additional Images */}
-            {project.additionalImages && project.additionalImages.length > 0 && (
-              <div className="mt-12">
-                <h2 className="text-xl font-semibold mb-6 text-gray-900">Project Gallery</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {project.additionalImages.map((image, index) => (
-                    <div key={index} className="relative h-48 rounded-lg overflow-hidden bg-gray-100">
-                      <Image 
-                        src={image} 
-                        alt={`${project.title} screenshot ${index + 1}`} 
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
+        {/* Prev / next */}
+        <nav className="flex justify-between items-center border-t border-gray-200 pt-6">
+          <div>
+            {projectIndex > 0 && (
+              <Link
+                href={`/projects/${projects[projectIndex - 1].id}`}
+                className="micro hover:text-ink transition-colors duration-200"
+              >
+                ← previous project
+              </Link>
             )}
           </div>
-
-          {/* Navigation */}
-          <div className="p-8 border-t border-gray-200">
-            <div className="flex justify-between items-center">
-              <div>
-                {projects.findIndex(p => p.id === project.id) > 0 && (
-                  <Link 
-                    href={`/projects/${projects[projects.findIndex(p => p.id === project.id) - 1].id}`}
-                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                    Previous Project
-                  </Link>
-                )}
-              </div>
-              <div>
-                {projects.findIndex(p => p.id === project.id) < projects.length - 1 && (
-                  <Link 
-                    href={`/projects/${projects[projects.findIndex(p => p.id === project.id) + 1].id}`}
-                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
-                  >
-                    Next Project
-                    <ExternalLink className="w-4 h-4" />
-                  </Link>
-                )}
-              </div>
-            </div>
+          <div>
+            {projectIndex < projects.length - 1 && (
+              <Link
+                href={`/projects/${projects[projectIndex + 1].id}`}
+                className="micro hover:text-ink transition-colors duration-200"
+              >
+                next project →
+              </Link>
+            )}
           </div>
-        </div>
+        </nav>
       </div>
       <Footer />
     </div>

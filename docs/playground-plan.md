@@ -219,7 +219,7 @@ Each item is one focused work session. Owner column: **me** = Claude writes code
 | 11 | `lib/turnstile.ts`, `lib/ratelimit.ts`, `lib/moderate.ts`         | me    | 9          | ⏳ blocked on 6,7 |
 | 12 | `app/api/visitors/submit/route.ts`                                | me    | 10,11      | ⏳ blocked |
 | 13 | `app/api/visitors/status/route.ts`                                | me    | 10         | ⏳ blocked |
-| 14 | `app/visitors/page.tsx` (read JSON, render grid)                  | me    | 9          | ⏳ ready (can start anytime) |
+| 14 | `app/visitors/page.tsx` (read JSON, render grid)                  | me    | 9          | ✅ done (in branch `redesign/bryl-minimal`) |
 | 15 | `app/visitors/submit-form.tsx` (modal + Turnstile)                | me    | 9          | ⏳ blocked on 6 (Turnstile site key) |
 | 16 | `.github/workflows/visitor-pr-guard.yml` (only allowed paths)     | me    | —          | ✅ done (in PR `setup/foundations`) |
 | 17 | `.github/workflows/stale-visitor-prs.yml`                         | me    | —          | ✅ done (in PR `setup/foundations`) |
@@ -298,6 +298,22 @@ Depends on what's done. With env vars in place:
 - Task #14: `app/visitors/page.tsx` (read-only grid — can start regardless, only needs the seed JSON)
 
 If env vars aren't ready yet, I can still ship task #14 (read-only grid page) since it only depends on `content/visitors.json` which already exists.
+
+### Session 2 — 2026-07-20 (bryl-minimal restyle + visitors grid)
+
+**What happened:**
+- Adopted the **bryl-minimal design language** (github.com/bryllim/bryl-minimal-design — a SKILL.md aesthetic spec, not an app) site-wide: strict monochrome ramp, no accent color, four font roles (Geist / Geist Mono / Geist Pixel Square / Source Serif 4), hairline borders, halftone dot accents, light/dark/system theming with 500ms crossfade, entrance stagger, reduced-motion support.
+- **Full site restyle** on branch `redesign/bryl-minimal` (branched from `setup/foundations` so the visitors seed files are available; `main` merged in afterwards):
+  - `app/globals.css` — token system (background/ink/gray-50…950 remapped wholesale under `.dark`), micro-label/section-label/page-title registers, halftone utilities, motion, article-body styles.
+  - `app/layout.tsx` — four fonts via next/font (Geist Pixel Square vendored at `app/fonts/GeistPixel-Square.woff2` from vercel/geist-font v1.7.2), pre-hydration theme script.
+  - `components/SiteShell.tsx` — replaces the old BrowserLayout browser-mockup: fixed left sidebar ≥1024px with numbered mono nav (01—about … 06—visitors), sticky blurred top bar + full-screen overlay menu below, light/dark/system switcher, "open to work" status dot.
+  - All pages restyled: about (/), projects, projects/[id], blog, blog/[slug], resume, contact. Blog post page dropped the dead share buttons and fake related-post links; contact page email typo fixed (steve → steven).
+- **Plan task #14 shipped:** `app/visitors/page.tsx` — server component, imports `content/visitors.json`, validates with `visitorsFileSchema`, renders the card grid + empty state, explains the GitOps flow, and shows a disabled "add your card" button off-production (submit wiring is tasks #10–13, still blocked on setup).
+- `npm run build` passes (lint + typecheck + 10 routes).
+
+**Still your homework (unchanged from session 1):** merge `setup/foundations` PR, branch protection + CODEOWNERS, GitHub App, Turnstile, Upstash, Vercel env vars, Discord webhook. Note: `redesign/bryl-minimal` contains the foundations commits, so merging it also merges foundations if you'd rather do one PR.
+
+**What to pick up in session 3:** with env vars in place — tasks #10 (lib/github.ts), #11 (turnstile/ratelimit/moderate), #12–13 (API routes), #15 (submit form modal, now with a design system to build it in).
 
 ---
 
