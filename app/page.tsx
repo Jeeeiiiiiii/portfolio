@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { SiNextdotjs, SiTypescript, SiTailwindcss, SiAmazonwebservices, SiDocker, SiKubernetes, SiTerraform, SiPrometheus, SiGrafana } from 'react-icons/si';
+import { SiNextdotjs, SiTypescript, SiTailwindcss, SiAmazonwebservices, SiDocker, SiKubernetes, SiTerraform, SiPrometheus, SiGrafana, SiJenkins, SiArgo, SiGithubactions } from 'react-icons/si';
 import Footer from '@/components/Footer';
 
 export const metadata = {
@@ -37,9 +37,35 @@ const techIcons = [
   { name: 'Terraform', icon: SiTerraform },
   { name: 'Prometheus', icon: SiPrometheus },
   { name: 'Grafana', icon: SiGrafana },
+  { name: 'Argo CD', icon: SiArgo },
+  { name: 'Jenkins', icon: SiJenkins },
+  { name: 'GitHub Actions', icon: SiGithubactions },
 ];
 
 const experience = [
+  {
+    title: "DevOps Engineer",
+    company: "GECO Asia",
+    period: "Mar 2026 — present",
+    bullets: [
+      "Deployed on-site with EssilorLuxottica's DevOps team; implement and maintain observability and GitOps tooling (EFK, Prometheus, Grafana, Argo CD) across PROD, DR, QUA, and PP environments",
+      "Designed and shipped an AI-driven first-layer alert triage wiring Prometheus/Alertmanager to an in-cluster HolmesGPT engine — automated root-cause analysis emailed before on-call engineers open a terminal, with cluster data kept in-house",
+      "Support developers through application deployments and issue troubleshooting across INT, Staging, UAT, and PROD",
+      "Perform AKS node pool migrations and Kubernetes version upgrades, handling scaling operations and application configuration updates",
+    ],
+  },
+  {
+    title: "DevOps Apprentice",
+    company: "EssilorLuxottica",
+    period: "Sep 2025 — Mar 2026",
+    bullets: [
+      "Assisted with AKS node pool migrations (Standard Es v3 → Standard Eads v5) across PROD, DR, QUA, and PP environments",
+      "Supported Kubernetes upgrades from v1.33.x to v1.34.x",
+      "Migrated enterprise tenant from CoreMedia v10 to v12 — repositories, databases, user initialization, infrastructure, and operational configurations",
+      "Deployed and managed Nginx Proxy Manager and Portainer; assisted with SSL/TLS certificate management across INT, Staging, UAT, and PROD",
+      "Diagnosed platform issues (memory heap constraints, disk utilization, application errors) using centralized logging and metrics",
+    ],
+  },
   {
     title: "Backend DevOps Trainee",
     company: "Hivelabs Technologies Corp.",
@@ -47,8 +73,8 @@ const experience = [
     bullets: [
       "Actively involved in full-stack development for an eCommerce application",
       "Assisted in frontend development tasks including UI fixes and layout enhancements using Flexbox",
-      "Third-party logistics integration with Lalamove and Gogo Express APIs",
-      "CI/CD pipeline with Bitbucket Pipelines to streamline deployment and improve development workflow",
+      "Worked on third-party payment integration with FiUU APIs",
+      "Utilized JIRA for task tracking, sprint planning, and ticket management in an Agile process",
     ],
   },
   {
@@ -56,9 +82,9 @@ const experience = [
     company: "Hivelabs Technologies Corp.",
     period: "Feb 2025 — Apr 2025",
     bullets: [
-      "Monitored system performance and analyzed server logs to identify and troubleshoot user-reported issues",
-      "Supported the validation of authentication systems and session handling, ensuring secure access and proper timeout settings",
-      "System monitoring and issue tracking",
+      "Conducted manual testing for an ERP system to ensure functionality and reliability",
+      "Designed comprehensive test scenarios and detailed test cases based on system requirements",
+      "Identified and documented bugs using Trello and Excel for efficient tracking and resolution",
     ],
   },
 ];
