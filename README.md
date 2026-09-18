@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# portfolio
 
-## Getting Started
+Personal site — [stevencarreon on Vercel](https://final-portfolio.vercel.app). Next.js 15 (App Router), Tailwind 4, the
+[bryl-minimal](https://github.com/bryllim/bryl-minimal-design) design language.
 
-First, run the development server:
+## What is where
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+app/                 routes: / (about), /projects, /projects/[slug], /blog, /resume, /contact, /visitors
+app/api/visitors/    submit (POST) and status (GET) — the visitor playground write path
+content/projects.ts  every project, one typed module; the grid, detail pages and resume read it
+content/work.ts      the "at work now" highlights on the about page
+content/visitors.json  the guestbook — edited only through pull requests
+lib/visitors/        config · github (App + PR) · turnstile · ratelimit · moderate · submit · pipeline
+public/diagrams/     archify architecture pages from the lab repos, embedded on project pages
+docs/playground-plan.md  the visitor playground: goals, architecture, security checklist, progress log
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Run it
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm ci
+npm run dev        # http://localhost:3000
+npm test           # vitest: lib/**/*.test.ts
+npm run typecheck
+npm run build      # lint + typecheck + build, same as CI
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Copy `.env.example` to `.env.local` for the optional integrations (visitor submissions, the contact map).
+Without them the site builds and runs; the visitor form shows a "submissions open soon" state.
 
-## Learn More
+## Editing content
 
-To learn more about Next.js, take a look at the following resources:
+- **A project** — add an entry to `content/projects.ts`. It appears on `/projects`, gets a page at
+  `/projects/<slug>`, and (if `status: 'shipped'`) is listed on `/resume`. If it has an archify
+  diagram, drop the HTML in `public/diagrams/` and set `links.diagram`.
+- **Work highlights** — `content/work.ts`. Written for a public site: no client names, tickets or hostnames.
+- **Visitor cards** — never by hand; they arrive as PRs labelled `visitor-submission`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Branches and environments
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Branch      | Vercel     | Purpose                              |
+|-------------|------------|--------------------------------------|
+| `main`      | production | read-only demo surface               |
+| `staging`   | preview    | the sandbox where the form is live   |
+| `visitor/*` | preview    | one branch per submitted card        |
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+CI (`.github/workflows/ci.yml`) runs lint, typecheck, unit tests and build on every PR and push to
+`main`/`staging`. `visitor-pr-guard.yml` fails any `visitor/*` PR that touches a file other than
+`content/visitors.json`; `stale-visitor-prs.yml` closes idle visitor PRs after 7 days.

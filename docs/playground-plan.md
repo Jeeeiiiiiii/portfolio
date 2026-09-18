@@ -80,8 +80,9 @@ Staging tracks `main` plus any in-flight work. The `/visitors` submit form is **
 Portfolio/
 ├── app/
 │   ├── visitors/
-│   │   ├── page.tsx              # grid of cards (server component, reads JSON)
-│   │   └── submit-form.tsx       # client component, modal form
+│   │   ├── page.tsx              # grid of cards + "how a card gets here" (server component)
+│   │   ├── pipeline-view.tsx     # the 8-stage rail; static explainer or live tracker
+│   │   └── submit-form.tsx       # client: modal form, Turnstile, polls status → tracker
 │   └── api/
 │       └── visitors/
 │           ├── submit/route.ts   # POST handler
@@ -89,11 +90,15 @@ Portfolio/
 ├── content/
 │   └── visitors.json             # source of truth, edited via PR
 ├── lib/
-│   ├── github.ts                 # Octokit client, branch+commit+PR helpers
-│   ├── turnstile.ts              # captcha verification
-│   ├── ratelimit.ts              # Upstash wrapper
-│   ├── moderate.ts               # validation + profanity + URL allowlist
-│   └── visitors-schema.ts        # zod schema (shared client/server)
+│   ├── visitors-schema.ts        # zod schema (shared client/server)
+│   └── visitors/
+│       ├── config.ts             # env in one place; isProduction(), turnstileSiteKey()
+│       ├── github.ts             # Octokit App: openVisitorPr(), getVisitorPrStatus(); path allowlist
+│       ├── turnstile.ts          # captcha verification
+│       ├── ratelimit.ts          # Upstash sliding windows; IP hashed; optional
+│       ├── moderate.ts           # HTML/link rejection in free text + profanity (obscenity)
+│       ├── submit.ts             # submitVisitorCard(): the whole write path, injectable deps
+│       └── pipeline.ts           # the 8 stages + stepStates(PrStatus) for the tracker
 ├── .github/
 │   ├── workflows/
 │   │   ├── ci.yml                # lint + typecheck + build on PR
@@ -154,7 +159,8 @@ Schema lives in `lib/visitors-schema.ts` (zod) and is imported by both the clien
 
 ### `GET /api/visitors/status?pr=<n>`
 
-Returns `{ state: "open" | "merged" | "closed", previewUrl: string | null, mergedAt: string | null }`.
+Returns `{ prNumber, prUrl, state: "open" | "merged" | "closed", checks: "pending" | "success" | "failure" | "none", previewUrl: string | null, mergedAt: string | null }`.
+Only PRs whose head branch starts with `visitor/` are reported; anything else is 404. `Cache-Control: no-store`.
 
 ---
 
@@ -163,25 +169,26 @@ Returns `{ state: "open" | "merged" | "closed", previewUrl: string | null, merge
 Non-negotiable before going public. Mark `[x]` as completed.
 
 - [ ] **GitHub App** (not PAT), installed only on the portfolio repo
-  - Permissions: `contents: write`, `pull-requests: write`, nothing else
+  - Write permissions: `contents: write`, `pull-requests: write`
+  - Read permissions (live tracker only): `checks: read`, `deployments: read`, `commit statuses: read` — without them the tracker degrades to "checks unknown / no preview" rather than failing
   - Private key stored as Vercel env var `GITHUB_APP_PRIVATE_KEY`
-- [ ] **App can only write** `content/visitors.json` — enforced in `lib/github.ts` (reject any other path) AND verified by a CI check on visitor PRs
+- [x] **App can only write** `content/visitors.json` — enforced in `lib/visitors/github.ts` (`assertAllowedPath`, `assertVisitorBranch`) AND verified by `visitor-pr-guard.yml`
 - [ ] **Branch protection on `main`**
   - Require 1 approving review (owner)
   - Require status checks: `ci.yml`, `visitor-pr-guard.yml` (verifies only allowed files changed)
   - Disallow force pushes, disallow deletions
   - Restrict who can push (just owner + the app's bot)
-- [ ] **CODEOWNERS** — every path owned by you
-- [ ] **Input validation** (zod)
+- [x] **CODEOWNERS** — every path owned by you (`.github/CODEOWNERS`)
+- [x] **Input validation** (zod + `moderate.ts`)
   - name 2..40, role 2..60, message 10..200, link optional + must match allowlist
-  - Link allowlist: `github.com`, `linkedin.com`, `<your-domain>` only
-  - Strip all HTML, reject Markdown links in message
-- [ ] **Profanity filter** — `bad-words` or similar, reject on hit (don't censor silently)
-- [ ] **Rate limit** — Upstash Redis, 1 submission/60s and 5/24h per IP
-- [ ] **Turnstile** captcha on form (Cloudflare, free)
-- [ ] **Stale PR auto-close** — workflow closes visitor PRs idle >7 days
-- [ ] **Secrets never logged** — review API route for accidental console.log of token
-- [ ] **`/api/visitors/submit` disabled on prod** — env guard, returns 404 if `VERCEL_ENV === 'production'`
+  - Link allowlist: `github.com`, `linkedin.com` (`lib/visitors/allowlist.ts`)
+  - HTML tags and anything link-shaped in free text are rejected (not stripped)
+- [x] **Profanity filter** — `obscenity` (English preset), reject on hit
+- [x] **Rate limit** — Upstash Redis, 1/60s and 5/24h per salted-hashed IP; skipped with a log line if Upstash is not configured (code); ⏳ needs the DB (you)
+- [x] **Turnstile** captcha on form, verified server-side; the route refuses to run without the secret (code); ⏳ needs the site (you)
+- [x] **Stale PR auto-close** — workflow closes visitor PRs idle >7 days
+- [x] **Secrets never logged** — routes log only error classes/messages, never the body or token; covered by a unit test
+- [x] **`/api/visitors/submit` disabled on prod** — returns 404 if `VERCEL_ENV === 'production'`
 
 ---
 
@@ -208,19 +215,19 @@ Each item is one focused work session. Owner column: **me** = Claude writes code
 |----|-------------------------------------------------------------------|-------|------------|--------|
 | 1  | Create `staging` branch from `main`, push                         | you   | —          | ✅ done |
 | 2  | Vercel: map `staging.<domain>` to `staging` branch                | you   | 1          | ⏳ todo (v1 uses auto Vercel subdomain — only needed when custom domain bought) |
-| 3  | Add `.github/CODEOWNERS` + branch protection on `main`            | you   | 4 merged   | ⏳ todo |
+| 3  | Add `.github/CODEOWNERS` + branch protection on `main`            | you   | 4 merged   | 🟡 CODEOWNERS added (session 3); branch protection still yours |
 | 4  | Add `.github/workflows/ci.yml` (lint+typecheck+build)             | me    | —          | ✅ done (in PR `setup/foundations`) |
 | 5  | Create GitHub App, install on repo, save credentials              | you   | —          | ⏳ todo |
 | 6  | Cloudflare Turnstile site, save site key + secret                 | you   | —          | ⏳ todo |
 | 7  | Upstash Redis DB, save REST URL + token                           | you   | —          | ⏳ todo |
 | 8  | Add Vercel env vars (App key, Turnstile, Upstash) for staging+prod | you  | 5,6,7      | ⏳ todo |
 | 9  | `lib/visitors-schema.ts` + `content/visitors.json` seed           | me    | —          | ✅ done (in PR `setup/foundations`) |
-| 10 | `lib/github.ts` (Octokit App auth + branch/commit/PR)             | me    | 9          | ⏳ blocked on 5 |
-| 11 | `lib/turnstile.ts`, `lib/ratelimit.ts`, `lib/moderate.ts`         | me    | 9          | ⏳ blocked on 6,7 |
-| 12 | `app/api/visitors/submit/route.ts`                                | me    | 10,11      | ⏳ blocked |
-| 13 | `app/api/visitors/status/route.ts`                                | me    | 10         | ⏳ blocked |
+| 10 | `lib/visitors/github.ts` (Octokit App auth + branch/commit/PR + status) | me | 9      | ✅ code done (session 3); untested against a real App until 5 |
+| 11 | `lib/visitors/{turnstile,ratelimit,moderate}.ts`                  | me    | 9          | ✅ code done (session 3); Upstash optional |
+| 12 | `app/api/visitors/submit/route.ts` + `lib/visitors/submit.ts`     | me    | 10,11      | ✅ done (session 3), 10 unit tests |
+| 13 | `app/api/visitors/status/route.ts`                                | me    | 10         | ✅ done (session 3) |
 | 14 | `app/visitors/page.tsx` (read JSON, render grid)                  | me    | 9          | ✅ done (in branch `redesign/bryl-minimal`) |
-| 15 | `app/visitors/submit-form.tsx` (modal + Turnstile)                | me    | 9          | ⏳ blocked on 6 (Turnstile site key) |
+| 15 | `app/visitors/submit-form.tsx` (modal + Turnstile + live tracker) | me    | 9          | ✅ done (session 3); renders once `NEXT_PUBLIC_TURNSTILE_SITE_KEY` exists |
 | 16 | `.github/workflows/visitor-pr-guard.yml` (only allowed paths)     | me    | —          | ✅ done (in PR `setup/foundations`) |
 | 17 | `.github/workflows/stale-visitor-prs.yml`                         | me    | —          | ✅ done (in PR `setup/foundations`) |
 | 18 | Webhook handler + Discord forwarder                               | me    | 5          | ⏳ blocked on 5 |
@@ -280,7 +287,7 @@ Append-only running log so the next session can pick up cold.
 3. Create **CODEOWNERS** file on `main` mapping everything to your GitHub user. Can be a separate small PR from a branch (proves the workflow).
 4. Create a **GitHub App** (plan task #5):
    - Settings → Developer settings → GitHub Apps → New
-   - Permissions: `contents: write`, `pull-requests: write`. Nothing else.
+   - Permissions: `contents: write`, `pull-requests: write`; read on `checks`, `deployments`, `commit statuses` for the tracker.
    - Install on `Jeeeiiiiiii/portfolio` only.
    - Save: App ID, Installation ID, private key (.pem file contents).
 5. Create **Cloudflare Turnstile** site (plan task #6) — free. Save site key + secret key.
@@ -314,6 +321,32 @@ If env vars aren't ready yet, I can still ship task #14 (read-only grid page) si
 **Still your homework (unchanged from session 1):** merge `setup/foundations` PR, branch protection + CODEOWNERS, GitHub App, Turnstile, Upstash, Vercel env vars, Discord webhook. Note: `redesign/bryl-minimal` contains the foundations commits, so merging it also merges foundations if you'd rather do one PR.
 
 **What to pick up in session 3:** with env vars in place — tasks #10 (lib/github.ts), #11 (turnstile/ratelimit/moderate), #12–13 (API routes), #15 (submit form modal, now with a design system to build it in).
+
+### Session 3 — 2026-09-18 (write path + live tracker)
+
+**What happened:**
+- **Tasks #10–13 and #15 shipped as code**, all behind env presence so nothing turns on until the external setup exists:
+  - `lib/visitors/submit.ts` — `submitVisitorCard(body, {ip}, deps)`: validate → captcha → rate limit → moderate → open PR, returning a result union. Route handlers only map to HTTP. `deps` is injectable; 10 vitest cases cover every branch with fakes (`lib/visitors/submit.test.ts`).
+  - `lib/visitors/github.ts` — Octokit `App` auth; `openVisitorPr()` reads `content/visitors.json` at `main`, validates it, appends, creates `visitor/<uuid>`, commits, opens the PR, adds the `visitor-submission` label. Refuses any other path or branch prefix. `getVisitorPrStatus()` returns state, a check-run summary, the Vercel preview URL (GitHub Deployments → deployment status `environment_url`, falling back to a "Vercel" commit status) and `mergedAt`.
+  - `lib/visitors/{turnstile,ratelimit,moderate,config,allowlist}.ts`.
+  - `app/api/visitors/{submit,status}/route.ts`.
+  - `app/visitors/submit-form.tsx` — modal with explicit-render Turnstile; on success becomes a **live tracker** polling `/api/visitors/status` every 8s.
+  - `app/visitors/pipeline-view.tsx` + `lib/visitors/pipeline.ts` — the eight stages (submit → branch → PR → checks → preview → review → merge → live) drawn as a rail. Static on the page as "how a card gets here"; lit up per `stepStates(PrStatus)` in the tracker (7 tests).
+- **Found by the tests:** `moderate()` was being handed the `link` field and rejected every valid link as "a link in free text". Fixed before it shipped.
+- `.github/CODEOWNERS`, `.env.example`, `vitest` + `npm test` in CI, README rewritten.
+- **Code review pass** (`/code-review high`) found six issues, all fixed: the tracker needed read permissions the App was documented not to have (now degrades gracefully and the docs list them); the status route was an unmetered proxy onto the App token (now 404 on production + its own 20/min limiter); rate limit was consumed before moderation (reordered); a stale Turnstile token survived closing the modal; raw visitor text in the PR body allowed `@mention` spam (now a JSON code fence); captcha/limiter network failures escaped as 500s (now `upstream_failed`).
+- Bug fixed on the way: the featured blog post's slug did not match its key (only worked via a fallback); unknown slugs now 404.
+- The design is written up as a project page: `/projects/visitor-playground`.
+
+**Unchanged homework (you) — the feature is dark until these exist:**
+1. Merge this branch; set **branch protection** on `main` (require PR, CODEOWNERS review, `Lint, typecheck, build` and `Only content/visitors.json may change` checks; no force pushes).
+2. **GitHub App** (write: contents, pull-requests; read: checks, deployments, commit statuses; installed on this repo only) → `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`, `GITHUB_APP_PRIVATE_KEY`.
+3. **Cloudflare Turnstile** site → `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`.
+4. **Upstash Redis** → `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` (optional; without it the rate limit is skipped and logged).
+5. Add them as Vercel env vars for **Preview** (staging + visitor branches). Production needs none of them — it never serves the submit route.
+6. Push `staging` and run the first end-to-end submission (task #19).
+
+**What to pick up in session 4:** task #18 (GitHub webhook → Discord), task #19 (end-to-end on staging), then the blog post (#20).
 
 ---
 

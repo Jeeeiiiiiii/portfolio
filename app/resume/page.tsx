@@ -1,4 +1,6 @@
+import Link from 'next/link';
 import Footer from '@/components/Footer';
+import { projects } from '@/content/projects';
 
 export const metadata = {
   title: "Resume | Steven Carreon",
@@ -54,11 +56,12 @@ const experience = [
 ];
 
 const skills = [
-  { label: "Languages", value: "PHP, Python, Bash" },
-  { label: "Database", value: "MySQL" },
-  { label: "AWS", value: "EC2, S3, CloudFront, IAM, VPC, Route 53, Lambda, CloudFormation, API Gateway" },
-  { label: "Tools", value: "Git, Docker, Kubernetes, Terraform, GitHub Actions, Jenkins, Argo CD, Prometheus, Grafana" },
-  { label: "OS", value: "Linux Ubuntu" },
+  { label: "Kubernetes", value: "AKS, EKS, Helm, Argo CD, Istio, ingress-nginx, External Secrets, HPA, ServiceMonitor" },
+  { label: "Cloud", value: "Azure (AKS, ACR) · AWS (EC2, VPC, IAM, S3, RDS, SQS, Lambda, ECR, EKS, Secrets Manager, CloudWatch, CloudFront, Route 53, API Gateway)" },
+  { label: "IaC & CI/CD", value: "Terraform, Docker, GitHub Actions (self-hosted runners), Jenkins (JCasC), Bitbucket Pipelines, Ansible (reviewed)" },
+  { label: "Observability", value: "Prometheus, Alertmanager, Grafana, Loki, Tempo, OpenTelemetry, EFK / ECK, CloudWatch, HolmesGPT" },
+  { label: "Security", value: "Semgrep (SAST), Trivy (IaC + image, CycloneDX SBOM), OWASP ZAP (DAST), mTLS / AuthorizationPolicy, TLS certificate management" },
+  { label: "Languages & data", value: "Python (Flask, FastAPI, boto3), Bash, TypeScript, PHP · PostgreSQL, MySQL" },
 ];
 
 export default function ResumePage() {
@@ -120,18 +123,25 @@ export default function ResumePage() {
           </div>
         </section>
 
-        {/* Projects */}
+        {/* Projects — read from the same module as /projects */}
         <section className="mb-12">
           <h2 className="section-label border-b border-gray-200 pb-3 mb-5">03 — relevant projects</h2>
-          <h3 className="font-semibold tracking-tight mb-2">
-            Patient Monitoring System with QR Code Integration — Deployed on AWS using Terraform
-          </h3>
-          <ul className="space-y-1.5 text-[13px] text-gray-500 list-disc pl-5">
-            <li>Designed and deployed a patient monitoring system that leverages QR code technology for quick and accurate access to patient records.</li>
-            <li>Provisioned a two-tier architecture in AWS using Terraform, separating application and database layers for scalability and maintainability.</li>
-            <li>Automated infrastructure deployment, including EC2 instances, RDS, and VPC networking, ensuring a reliable and cost-effective cloud environment.</li>
-            <li>Implemented application delivery using GitOps, making it easy to deploy and manage microservices with minimal manual effort.</li>
-          </ul>
+          <div className="space-y-6">
+            {projects
+              .filter((p) => p.status === 'shipped')
+              .map((p) => (
+                <div key={p.slug}>
+                  <div className="flex justify-between items-baseline gap-4 mb-1">
+                    <h3 className="font-semibold tracking-tight">
+                      <Link href={`/projects/${p.slug}`} className="link-u">{p.title}</Link>
+                    </h3>
+                    <span className="micro shrink-0">{p.period}</span>
+                  </div>
+                  <p className="micro mb-2">{p.stack.slice(0, 6).join(' · ')}</p>
+                  <p className="text-[13px] text-gray-500 leading-relaxed">{p.summary}</p>
+                </div>
+              ))}
+          </div>
         </section>
 
         {/* Skills — hairline-divided grid; the dividers are the design */}
