@@ -402,6 +402,87 @@ export const projects: Project[] = [
 
   // ------------------------------------------------------------------ //
   {
+    slug: 'rag-lab',
+    title: 'RAG Lab',
+    tagline: 'retrieval quality as a number',
+    status: 'shipped',
+    kind: 'lab',
+    period: 'sep 2026',
+    summary:
+      'Retrieval-augmented generation where the retrieval is measured, not assumed: two chunkers, two embedders, three retrievers and two answerers behind the same seams, a golden set that turns each choice into hit@k and MRR, a planted prompt-injection document, and the eval as a CI gate.',
+    stack: ['Python', 'FastAPI', 'Qdrant', 'fastembed', 'BM25', 'Claude', 'Anthropic SDK', 'Docker Compose', 'GitHub Actions', 'pytest'],
+    links: {
+      github: 'https://github.com/Jeeeiiiiiii/rag-lab',
+      diagram: '/diagrams/rag-lab.html',
+    },
+    purpose: [
+      'Every RAG demo works on its own demo questions. The interesting question is how you know a chunking change made retrieval better, or worse. The corpus here is the READMEs of the other labs, so each question has a known answer in a known section, and 28 of them turn chunking, embedding and retrieval mode into a table of numbers.',
+      'The chat is beside the point. The subject is the measurement, and what it says: heading-aware chunks plus hybrid retrieval reach hit@1 0.79, hit@5 0.96, MRR 0.86 on this corpus; dense retrieval alone loses exact identifiers, BM25 alone loses paraphrase, and reciprocal rank fusion keeps both.',
+    ],
+    ascii: `   corpus/*.md ──▶ chunk ──▶ guard ──▶ embed ──▶ store          eval/golden.jsonl
+                  fixed |    flags     bge-small |   Qdrant |          │
+                  heading  injection   hashing     memory            ▼
+                                                     │       ┌──────────────────┐
+   question ──▶ retrieve ─────────────────────────────┘       │ hit@1 hit@5 MRR  │
+                dense · bm25 · hybrid (RRF)                  │ per config       │
+                    │                                        │ + guard check    │
+                    ▼                                        │ → CI gate ≥ 0.9  │
+                answer ──▶ text + citations (labels only     └──────────────────┘
+                Claude |   from the passages it was given)
+                extractive   flagged chunks withheld`,
+    decisions: [
+      {
+        title: 'The corpus is the other labs\' READMEs',
+        why: 'Six documents, about 57 chunks, one of them planted. Questions with known answers in known sections are what make an eval honest; a synthetic corpus proves nothing about real engineering prose with tables, code fences and identifiers.',
+      },
+      {
+        title: 'Retrieval quality is a CI gate',
+        why: 'python -m rag_lab eval --gate 0.9 exits 1 if heading·hybrid hit@5 drops. A chunking change that quietly loses three questions is a regression like any other; the table lands in the GitHub job summary on every pull request.',
+      },
+      {
+        title: 'Hybrid by reciprocal rank fusion, not score mixing',
+        why: 'BM25 scores and cosine similarities live on different scales; RRF only needs ranks. It rewards agreement between the two lists and never needs a weight tuned per corpus.',
+      },
+      {
+        title: 'The heading path rides inside the chunk text',
+        why: 'The cheapest possible context injection. A chunk that starts "Pipeline Lab > The pipeline, stage by stage" embeds differently from the same table alone, and the section name is what a citation shows the reader. It helped every retrieval mode.',
+      },
+      {
+        title: 'Idempotent ingestion by content hash',
+        why: 'A chunk id is sha256(source + text), the store upserts. Re-running ingest over the same corpus embeds nothing; an edited paragraph re-embeds only itself; a chunking change rebuilds into its own collection, never a mixed one.',
+      },
+      {
+        title: 'The extractive answerer is the floor',
+        why: 'It returns the top passages, labelled, and says no model was used. The Claude answerer wraps it: citations must be labels it was given (others are dropped and logged), sufficient=false is an honest "not in the documents", and any failure falls back. answered_by on every response says which path wrote the words.',
+      },
+      {
+        title: 'Retrieved text is data, in two layers',
+        why: 'At ingest, chunks that look like instructions to a model are flagged and stored, not dropped, so the eval can assert the planted document is both retrieved and flagged. At answer time flagged chunks are withheld from the context and listed as withheld in the response.',
+      },
+    ],
+    practices: [
+      'Two adapters at every seam: chunking, embedder, store, retriever, answerer. The second adapter always runs with no daemon, no download and no key, so 17 tests and the whole eval run in-process in under a second.',
+      'Structure-aware chunking that ignores headings inside code fences and only windows a section when it is too long.',
+      'A guard that is explainable regexes, with a documented false positive: a README discussing "the system prompt" tripped it, a test caught it, the pattern now requires an imperative.',
+      'FastAPI with /ingest, /search, /ask, /healthz and /metrics (Prometheus text); a health check that reports configuration rather than triggering a model download.',
+      'A demo script that proves eight steps against Docker: idempotent re-ingest, three retrievers on an identifier question and on a paraphrase, a grounded answer, the injection retrieved-flagged-withheld, the eval table with its gate, the metrics.',
+    ],
+    honest: [
+      'Real: Qdrant in Docker with cosine distance and idempotent upserts; BAAI/bge-small-en-v1.5 embeddings through fastembed on CPU; the numbers in the table, reproducible from the committed corpus and golden set.',
+      'The golden set is small and self-authored: 28 questions over six documents by the person who wrote the documents. It measures relative changes well and absolute quality less so.',
+      'The Claude answerer is verified with a scripted client, not a live call; grounding, citation checking, withholding and the fallbacks are covered by tests. The guard is regexes: it catches the planted document and common phrasings, and a determined attacker writes around it — the semantic guard is the next step, and the citation check is what limits the damage.',
+    ],
+    next: [
+      'A cross-encoder reranker over the hybrid top-20; the eval will say exactly what it buys.',
+      'Answer faithfulness as a metric: an LLM judge over each cited passage, so the table gains a column retrieval numbers cannot give.',
+      'A chunk-size sweep as one command, plotted.',
+      'A semantic guard behind the regexes: embed known injection phrasings and flag by cosine distance.',
+      'Run app/ through pipeline-lab; the eval gate becomes a stage between build and deploy.',
+    ],
+  },
+
+  // ------------------------------------------------------------------ //
+  {
     slug: 'visitor-playground',
     title: 'Visitor Playground',
     tagline: 'this site\'s gitops guestbook',
