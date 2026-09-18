@@ -461,7 +461,7 @@ export const projects: Project[] = [
       },
     ],
     practices: [
-      'Two adapters at every seam: chunking, embedder, store, retriever, answerer. The second adapter always runs with no daemon, no download and no key, so 17 tests and the whole eval run in-process in under a second.',
+      'Two adapters at every seam: chunking, embedder, store, retriever, answerer. The second adapter always runs with no daemon, no download and no key, so 20 tests and the whole eval run in-process in under a second.',
       'Structure-aware chunking that ignores headings inside code fences and only windows a section when it is too long.',
       'A guard that is explainable regexes, with a documented false positive: a README discussing "the system prompt" tripped it, a test caught it, the pattern now requires an imperative.',
       'FastAPI with /ingest, /search, /ask, /healthz and /metrics (Prometheus text); a health check that reports configuration rather than triggering a model download.',
