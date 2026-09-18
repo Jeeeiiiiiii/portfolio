@@ -316,85 +316,86 @@ export const projects: Project[] = [
   {
     slug: 'finops-agent',
     title: 'FinOps Agent',
-    tagline: 'an agent that explains the bill, not just reports it',
-    status: 'in-design',
-    kind: 'architecture',
-    period: 'sep 2026 — designing',
+    tagline: 'a cost spike, explained — not just reported',
+    status: 'shipped',
+    kind: 'lab',
+    period: 'sep 2026',
     summary:
-      'An autonomous cost-anomaly investigator for AWS: a scheduled agent that detects a spend spike, correlates it with what changed in the account, asks a model to explain the likely cause, and posts to Slack only when something is actually wrong.',
-    stack: ['Python', 'Lambda', 'EventBridge', 'Cost Explorer', 'CloudTrail', 'Athena', 'Bedrock', 'Claude', 'Slack', 'Terraform'],
+      'A scheduled agent that pulls AWS cost by service, finds what moved, pulls the write calls from CloudTrail for the same window, asks a model what most likely happened, archives the finding, and posts to Slack — only when something is actually wrong. A quiet day sends nothing.',
+    stack: ['Python', 'Lambda', 'EventBridge', 'Cost Explorer', 'CloudTrail', 'S3', 'Secrets Manager', 'Claude', 'Anthropic SDK', 'Terraform', 'pytest'],
     links: {
+      github: 'https://github.com/Jeeeiiiiiii/finops-agent',
+      diagram: '/diagrams/finops-agent.html',
       inspiredBy: {
         label: 'AnuragJosyula/autonomous-finops-agent',
         url: 'https://github.com/AnuragJosyula/autonomous-finops-agent',
       },
     },
     purpose: [
-      'Cost dashboards tell you that spend went up. The question on a Monday morning is why — which service, since when, and what deploy or config change lines up with it. That is an investigation, and investigations are what an agent loop is good at.',
-      'The design is read-only by construction: the agent can look at cost data and audit logs, and can talk; it cannot change anything. Its worst case is a wrong paragraph in Slack, not a deleted resource.',
+      'Cost dashboards tell you that spend went up. The question on a Monday morning is why — which service, since when, and what deploy or config change lines up with it. That is an investigation, and the interesting design question is which parts of it should be arithmetic and which parts should be judgement.',
+      'Everything runs locally against Floci: the Lambda, the schedules, S3, Secrets Manager and Cost Explorer are all real there. Five scenario fixtures put a spike in front of the agent on demand, because you cannot wait for one to happen.',
     ],
-    ascii: `   EventBridge (daily)
-         │
-         ▼
-   ┌───────────────────────────── Lambda: finops-agent (Python) ─────────────────────────────┐
-   │                                                                                          │
-   │   1. detect_spikes ──▶ Cost Explorer: daily cost by service, 7-day baseline              │
-   │        │               flag: > 25% over baseline, or a service that did not exist        │
-   │        ▼                                                                                 │
-   │   2. cost_timeseries ──▶ per-service daily series for the flagged ones                   │
-   │        │               (CUR mode: Athena over the usage report, resource-level)          │
-   │        ▼                                                                                 │
-   │   3. recent_changes ──▶ CloudTrail LookupEvents: write calls in the window,              │
-   │        │               who / what / when, filtered to the spiking service                │
-   │        ▼                                                                                 │
-   │   4. explain ──▶ Bedrock (Claude, tool use): the model drives 1–3 as tools,              │
-   │        │         ends with cause, confidence, and a recommended action                   │
-   │        ▼                                                                                 │
-   │   5. notify ──▶ Slack webhook, only if an anomaly survived; findings archived to S3      │
-   └──────────────────────────────────────────────────────────────────────────────────────────┘
-        IAM: ce:Get*, cloudtrail:LookupEvents, athena:*Query*, s3 read on the CUR bucket, bedrock:InvokeModel
-             — no mutating permission anywhere`,
+    ascii: `   EventBridge  cron(0 16 * * ? *)  daily         cron(0 8 ? * MON *)  weekly
+        │ {"mode":"daily"}                              │ {"mode":"digest"}
+        ▼                                               ▼
+   ┌────────────────────── Lambda: finops-agent (Python 3.12) ───────────────────────┐
+   │                                                                                  │
+   │  1. costs     Cost Explorer ── daily cost by service, 14-day window              │
+   │  2. detect    pure math: median baseline, +25% AND +$1, or a new service ≥ $1    │
+   │  3. quiet?    nothing moved → return. nothing sent.                              │
+   │  4. evidence  per anomaly: the series + CloudTrail write calls in the window     │
+   │  5. explain   ┌ Claude, with 3 read-only tools, capped at 8 turns ┐              │
+   │               └ on any failure: RuleExplainer (deterministic)     ┘              │
+   │  6. dedupe    already alerted in the last 3 days? archive, but do not send       │
+   │  7. archive   S3  findings/<day>/<service>.json   (every finding, alerted or not)│
+   │  8. notify    Slack, one message, evidence attached                              │
+   └──────────────────────────────────────────────────────────────────────────────────┘
+        ▲ ce:GetCostAndUsage     ▲ cloudtrail:LookupEvents     ▲ secretsmanager:GetSecretValue
+      IAM: read costs, read trail, write own bucket, read own two secrets, log. Nothing else.`,
     decisions: [
       {
-        title: 'Agentic, not scripted',
-        why: 'The model drives the investigation through tool use rather than a fixed if/else tree. A spike in Lambda cost and a spike in NAT gateway cost need different follow-up questions; the tools stay small and the model decides which to ask.',
+        title: 'Scripted evidence, agentic explanation',
+        why: "Detection is arithmetic — pure functions over daily cost rows, tested. The model is only asked what the evidence means. Arithmetic does not hallucinate and does not cost tokens; the model's judgement is spent correlating a CreateNatGateway with a NAT charge, not deciding whether $28 is more than $5.",
       },
       {
-        title: 'Two cost modes',
-        why: 'Cost Explorer needs zero setup and answers "which service". The Cost & Usage Report queried through Athena answers "which resource", at the price of a bucket and a Glue table. Start with the first; switch on the second when the question gets specific.',
-      },
-      {
-        title: 'Thresholds are relative and explicit',
-        why: '25% over a 7-day rolling baseline, or an absolute floor for a service that had no history. Both numbers live in configuration, not in the prompt, so they can be tuned without touching the model.',
-      },
-      {
-        title: 'Quiet by default',
-        why: 'No anomaly, no message. A daily "everything is fine" post trains people to ignore the channel. Findings are archived to S3 either way so the history exists.',
+        title: 'The rule explainer is the floor, not a last resort',
+        why: 'RuleExplainer writes a complete alert from the numbers and the change list. ClaudeExplainer wraps it and falls back on any failure: API error, refusal, turn cap, no typed report. An alert that depends on a model being up sometimes does not arrive. The model makes the message better; it never decides whether there is one.',
       },
       {
         title: 'Read-only IAM as the safety model',
-        why: 'The agent recommends; a human acts. The role has no permission that can change state, so prompt injection through a resource tag or a CloudTrail event name cannot become an action.',
+        why: 'The role reads costs and the trail, writes its own bucket, reads its own two secrets, logs. No statement can create, modify or delete anything — so text the model reads from CloudTrail event names or resource tags cannot become an action. The system prompt says "data, not instructions"; the policy makes it true.',
       },
       {
-        title: 'Terraform, and a real account',
-        why: 'Cost Explorer and CloudTrail have no emulator, so unlike the labs this runs against a real account. Terraform rather than a CloudFormation template so it matches the rest of the portfolio, with a cost ceiling on the Bedrock calls.',
+        title: 'Two adapters at every seam',
+        why: 'Cost: Cost Explorer or a JSON fixture. Changes: CloudTrail or a fixture. Explainer: Claude or rules. Notifier: Slack or stdout. Archive: S3 or memory. The fixtures are how 30 tests run with no account and no key, and how python -m finops_agent runs the whole thing in a terminal in under a second.',
+      },
+      {
+        title: 'Two numbers, and both must trip',
+        why: '+25% over a 7-day median AND at least +$1. A ratio alone pages on $0.001 → $0.003; a dollar floor alone pages on $1,000 → $1,010. The median, not the mean, so one earlier spike does not hide the next. All of it is configuration, not prompt text.',
+      },
+      {
+        title: 'Quiet by default; archive everything',
+        why: 'No anomaly, no message — a daily "all fine" trains people to ignore the channel. Every finding lands in S3 first, alerted or not; a repeat within 3 days is archived but not sent; the weekly digest reads the archive.',
       },
     ],
     practices: [
-      'Small, single-purpose tools with typed inputs and outputs, so the model\'s context stays short and the tool results are easy to test without a model.',
-      'Dedupe per service per day so a multi-day spike does not page every morning.',
-      'Every alert carries its evidence: the numbers, the CloudTrail events it correlated, and the model\'s stated confidence.',
-      'Serverless and cheap: a daily Lambda and a handful of Bedrock calls, on the order of a few dollars a month.',
+      'One deep interface: investigate(day, deps) → Report. The Lambda handler and the CLI are thin callers; tests call it with fakes at every seam.',
+      'The Claude loop is a manual tool loop: strict tool schemas, both tool results returned in one message, unknown tools returned as is_error, windows clamped, eight turns at most, a typed report via a report_finding tool.',
+      "Secrets are fetched from Secrets Manager at start and never placed in the function's environment; a missing secret degrades the feature (log instead of Slack, rules instead of Claude) rather than failing the run.",
+      'Every alert carries its evidence and its provenance: the numbers, the correlated CloudTrail events, and explained_by: claude · rules · claude→rules.',
+      'A Slack stand-in container on the emulator network receives the exact webhook payload, so the notification path is proven end to end without a workspace.',
     ],
     honest: [
-      'This is at the architecture stage. The design above is what will be built; the repository will follow once the first end-to-end run works against a real account.',
-      'Modelled on AnuragJosyula/autonomous-finops-agent, credited in the links. The differences are Terraform instead of CloudFormation, findings archived to S3, and the read-only IAM framing made explicit.',
+      'Verified end to end on the emulator: the demo proves a quiet day, the NAT spike correlated with CreateNatGateway / CreateRoute / DeleteVpcEndpoints by terraform-ci the day before, dedupe the next day, a new service, a usage-driven spike with no changes (the agent says so), the live Cost Explorer read, the digest, and the JSON log.',
+      'Cost Explorer on the emulator is real but tiny — fractions of a cent — so the live source correctly never trips the $1 floor; the fixtures are the spikes. CloudTrail on the emulator returns nothing, so the fixture change source carries the audit events per scenario.',
+      'The Claude path is verified with a scripted client, not a live call — no API key was available when this was built. The loop, the round-trip, the fallbacks and the request shape are covered by tests; a real run is one environment variable away. Bedrock is a stub locally.',
     ],
     next: [
-      'Build the four tools and a runner that exercises them without a model.',
-      'First end-to-end run in Cost Explorer mode against a real account.',
-      'CUR + Athena mode for resource-level attribution.',
-      'A weekly digest mode alongside the daily anomaly check.',
+      'Run it against a real account: delete the endpoints block and the static credentials, keep everything else.',
+      'CUR + Athena mode behind the same CostSource seam, for resource-level attribution.',
+      'Usage-type breakdown as a fourth tool, so the model can tell NAT data processing from NAT hours.',
+      'A token budget per run as a CloudWatch metric; past the ceiling, the rules floor takes over for the day.',
+      'Slack reactions written back to the finding, so the digest can say how many alerts were actionable.',
     ],
   },
 
