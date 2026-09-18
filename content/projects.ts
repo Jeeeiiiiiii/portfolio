@@ -367,7 +367,7 @@ export const projects: Project[] = [
       },
       {
         title: 'Two adapters at every seam',
-        why: 'Cost: Cost Explorer or a JSON fixture. Changes: CloudTrail or a fixture. Explainer: Claude or rules. Notifier: Slack or stdout. Archive: S3 or memory. The fixtures are how 30 tests run with no account and no key, and how python -m finops_agent runs the whole thing in a terminal in under a second.',
+        why: 'Cost: Cost Explorer or a JSON fixture. Changes: CloudTrail or a fixture. Explainer: Claude or rules. Notifier: Slack or stdout. Archive: S3 or memory. The fixtures are how 38 tests run with no account and no key, and how python -m finops_agent runs the whole thing in a terminal in under a second.',
       },
       {
         title: 'Two numbers, and both must trip',
@@ -383,6 +383,7 @@ export const projects: Project[] = [
       'The Claude loop is a manual tool loop: strict tool schemas, both tool results returned in one message, unknown tools returned as is_error, windows clamped, eight turns at most, a typed report via a report_finding tool.',
       "Secrets are fetched from Secrets Manager at start and never placed in the function's environment; a missing secret degrades the feature (log instead of Slack, rules instead of Claude) rather than failing the run.",
       'Every alert carries its evidence and its provenance: the numbers, the correlated CloudTrail events, and explained_by: claude · rules · claude→rules.',
+      'Investigates the last complete day, not the partial current one; dedupe counts only alerts that were actually delivered; CloudTrail paging and the model client are bounded so a hung dependency leaves time for the rules floor. All three came out of a code-review pass after the first end-to-end run.',
       'A Slack stand-in container on the emulator network receives the exact webhook payload, so the notification path is proven end to end without a workspace.',
     ],
     honest: [
