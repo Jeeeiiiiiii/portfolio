@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import Footer from '@/components/Footer';
 
@@ -15,9 +16,9 @@ interface BlogPostsCollection {
   [key: string]: BlogPost;
 }
 
-const getBlogPost = (slug: string) => {
+const getBlogPost = (slug: string): BlogPost | undefined => {
   const blogPosts: BlogPostsCollection = {
-    "building-responsive-uis-with-tailwind": {
+    "deploy-2-tier-architecture-on-aws-through-terraform": {
       title: "Deploying 2-tier Architecture on AWS through Terraform",
       date: "December, 2024",
       image: "/terraform_aws.jpg",
@@ -331,7 +332,7 @@ export default function TodoList() {
     }
   };
   
-  return blogPosts[slug] || blogPosts["building-responsive-uis-with-tailwind"];
+  return blogPosts[slug];
 };
 
 
@@ -340,7 +341,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const { slug } = await params; // Directly access `slug` from `params`
 
   // Get the blog post based on the slug
-  const post = await getBlogPost(slug);
+  const post = getBlogPost(slug);
+  if (!post) notFound();
 
   return (
     <div className="min-h-screen">

@@ -1,6 +1,7 @@
 import { z } from 'zod';
+import { LINK_HOST_ALLOWLIST } from './visitors/allowlist';
 
-export const LINK_HOST_ALLOWLIST = ['github.com', 'linkedin.com'] as const;
+export { LINK_HOST_ALLOWLIST };
 
 const allowlistedUrl = z
   .string()

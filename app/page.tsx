@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { SiNextdotjs, SiTypescript, SiTailwindcss, SiAmazonwebservices, SiDocker, SiKubernetes, SiTerraform, SiPrometheus, SiGrafana, SiJenkins, SiArgo, SiGithubactions } from 'react-icons/si';
+import { SiAmazonwebservices, SiKubernetes, SiHelm, SiTerraform, SiDocker, SiArgo, SiGithubactions, SiJenkins, SiPrometheus, SiGrafana, SiIstio, SiPython, SiLinux, SiNextdotjs, SiTypescript } from 'react-icons/si';
+import { VscAzure } from 'react-icons/vsc';
 import Footer from '@/components/Footer';
+import { workContext, workHighlights } from '@/content/work';
 
 export const metadata = {
   title: "Devops Engineer | Steven Carreon",
@@ -28,18 +30,22 @@ const certifications = [
 ];
 
 const techIcons = [
-  { name: 'Next.js', icon: SiNextdotjs },
-  { name: 'TypeScript', icon: SiTypescript },
-  { name: 'Tailwind CSS', icon: SiTailwindcss },
-  { name: 'AWS', icon: SiAmazonwebservices },
-  { name: 'Docker', icon: SiDocker },
   { name: 'Kubernetes', icon: SiKubernetes },
+  { name: 'Azure / AKS', icon: VscAzure },
+  { name: 'AWS', icon: SiAmazonwebservices },
+  { name: 'Helm', icon: SiHelm },
   { name: 'Terraform', icon: SiTerraform },
+  { name: 'Docker', icon: SiDocker },
+  { name: 'Argo CD', icon: SiArgo },
+  { name: 'GitHub Actions', icon: SiGithubactions },
+  { name: 'Jenkins', icon: SiJenkins },
   { name: 'Prometheus', icon: SiPrometheus },
   { name: 'Grafana', icon: SiGrafana },
-  { name: 'Argo CD', icon: SiArgo },
-  { name: 'Jenkins', icon: SiJenkins },
-  { name: 'GitHub Actions', icon: SiGithubactions },
+  { name: 'Istio', icon: SiIstio },
+  { name: 'Python', icon: SiPython },
+  { name: 'Linux', icon: SiLinux },
+  { name: 'Next.js', icon: SiNextdotjs },
+  { name: 'TypeScript', icon: SiTypescript },
 ];
 
 const experience = [
@@ -105,7 +111,8 @@ export default function AboutPage() {
               <h1 className="page-title mb-3">steven carreon</h1>
               <p className="micro !text-[11px] mb-4">cloud / devops engineer</p>
               <p className="text-gray-500 mb-6 max-w-md">
-                Turning concepts into fully functional, engaging, and efficient applications.
+                I run platforms — Kubernetes, GitOps, observability — and build small labs to
+                understand the pieces underneath them.
               </p>
               <div className="flex flex-wrap items-center gap-5">
                 <Link
@@ -150,18 +157,25 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* GitHub */}
+        {/* At work now */}
         <section className="mb-14">
-          <h2 className="section-label mb-5">02 — github</h2>
-          <div className="border border-gray-200 rounded-2xl p-5 bg-gray-50 shadow-[var(--shadow-card)]">
-            <Image
-              src="http://ghchart.rshah.org/Jeeeiiiiiii"
-              alt="Jeeeiiiiiii's GitHub contribution chart"
-              width={800}
-              height={128}
-              className="w-full h-28 object-contain grayscale dark:invert"
-            />
-            <p className="micro mt-3">contribution graph — github.com/jeeeiiiiiii</p>
+          <h2 className="section-label mb-5">02 — at work now</h2>
+          <p className="text-[13px] text-gray-500 leading-relaxed mb-6 max-w-lg">{workContext}</p>
+          <div className="divide-y divide-gray-200 border-y border-gray-200">
+            {workHighlights.map((item) => (
+              <article key={item.title} className="py-6">
+                <h3 className="font-semibold tracking-tight mb-1">{item.title}</h3>
+                <p className="micro mb-3">{item.label}</p>
+                <p className="text-[13px] text-gray-500 leading-relaxed mb-3">{item.body}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {item.stack.map((tech) => (
+                    <span key={tech} className="rounded-full border border-gray-300 px-2 py-px micro !text-[9px]">
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+              </article>
+            ))}
           </div>
         </section>
 
@@ -186,9 +200,24 @@ export default function AboutPage() {
           </div>
         </section>
 
+        {/* GitHub */}
+        <section className="mb-14">
+          <h2 className="section-label mb-5">04 — github</h2>
+          <div className="border border-gray-200 rounded-2xl p-5 bg-gray-50 shadow-[var(--shadow-card)]">
+            <Image
+              src="http://ghchart.rshah.org/Jeeeiiiiiii"
+              alt="Jeeeiiiiiii's GitHub contribution chart"
+              width={800}
+              height={128}
+              className="w-full h-28 object-contain grayscale dark:invert"
+            />
+            <p className="micro mt-3">contribution graph — github.com/jeeeiiiiiii</p>
+          </div>
+        </section>
+
         {/* Certifications */}
         <section>
-          <h2 className="section-label mb-5">04 — certifications</h2>
+          <h2 className="section-label mb-5">05 — certifications</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {certifications.map((cert) => (
               <a
