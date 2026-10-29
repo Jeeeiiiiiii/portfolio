@@ -42,8 +42,9 @@ Without them the site builds and runs; the visitor form shows a "submissions ope
   `title`, `date` (YYYY-MM-DD), `excerpt`, `tags`, and optionally `image` (path under `public/`),
   `source` (the article it responds to) and `draft: true` (dev only). `lib/blog.ts` validates the
   frontmatter, renders the markdown, sanitises the HTML and builds the table of contents from `##` headings.
+  Or from your phone: `/blog write` (your own thoughts) or `/blog new url:<article>` in Discord drafts it as a PR (docs/blog-bot.md).
+  The three newest posts also appear on the home page.
 - **Work highlights** — `content/work.ts`. Written for a public site: no client names, tickets or hostnames.
-  Or from your phone: `/blog new url:<article> note:<angle>` in Discord drafts it as a PR (docs/blog-bot.md).
 - **Visitor cards** — never by hand; they arrive as PRs labelled `visitor-submission`.
 
 ## Branches and environments
