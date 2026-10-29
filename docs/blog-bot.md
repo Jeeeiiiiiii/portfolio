@@ -1,6 +1,6 @@
 # Blog bot — draft posts from Discord
 
-Type `/blog new url:<article> note:<your angle>` in Discord from anywhere. A
+Type `/blog write` (your own thoughts) or `/blog new url:<article> note:<your angle>` in Discord from anywhere. A
 GitHub Action has Claude write the post as a PR, Discord gets the preview link,
 and `/blog publish` merges it. Nothing is live until the PR is merged.
 
@@ -21,7 +21,8 @@ Discord /blog publish pr:N ──► merge (squash) ──► production deploy
 
 | Command | What it does |
 |---|---|
-| `/blog new url:<link> note:<text>` | Drafts a new post. The note can be one rough sentence, or empty. |
+| `/blog write` | Opens a text box (up to 4,000 characters) for your own thoughts — paste or dictate, rough is fine. Claude does a light edit: grammar, headings, code blocks; your ideas and sentences stay, nothing is added. |
+| `/blog new url:<link> note:<text>` | Drafts a post about an article. The note can be one rough sentence, or empty. |
 | `/blog revise pr:<n> note:<text>` | Rewrites the draft per your note and pushes to the same PR. |
 | `/blog publish pr:<n>` | Squash-merges the draft. Refuses anything not on a `blog/` branch, and GitHub refuses if checks fail. |
 | `/blog list` | Open drafts. |

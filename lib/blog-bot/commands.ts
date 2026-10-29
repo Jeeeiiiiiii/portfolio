@@ -10,13 +10,30 @@ import { dispatchDraft, listDraftPrs, mergeDraftPr, type DraftPr, type DraftRequ
  * with its result. Tests call this directly with fake adapters.
  */
 
-export const InteractionType = { PING: 1, APPLICATION_COMMAND: 2 } as const;
-export const ResponseType = { PONG: 1, MESSAGE: 4, DEFERRED_MESSAGE: 5 } as const;
+export const InteractionType = { PING: 1, APPLICATION_COMMAND: 2, MODAL_SUBMIT: 5 } as const;
+export const ResponseType = { PONG: 1, MESSAGE: 4, DEFERRED_MESSAGE: 5, MODAL: 9 } as const;
 const EPHEMERAL = 1 << 6;
+
+/** /blog write answers with this modal; its submission comes back as a MODAL_SUBMIT. */
+export const WRITE_MODAL_ID = 'blog-write';
+const WRITE_MIN_CHARS = 50;
+const WRITE_MAX_CHARS = 4000; // Discord's limit for one text input
+
+interface MessageData {
+  content: string;
+  flags?: number;
+  allowed_mentions: { parse: [] };
+}
+
+interface ModalData {
+  custom_id: string;
+  title: string;
+  components: unknown[];
+}
 
 export interface InteractionResponse {
   type: number;
-  data?: { content: string; flags?: number; allowed_mentions: { parse: [] } };
+  data?: MessageData | ModalData;
 }
 
 export type Handled =
@@ -49,11 +66,61 @@ const interactionSchema = z.object({
   user: z.object({ id: z.string() }).optional(),
   data: z
     .object({
-      name: z.string(),
+      // slash commands
+      name: z.string().optional(),
       options: z.array(option.extend({ options: z.array(option).optional() })).optional(),
+      // modal submissions
+      custom_id: z.string().optional(),
+      components: z.array(z.unknown()).optional(),
     })
     .optional(),
 });
+
+const writeModal: ModalData = {
+  custom_id: WRITE_MODAL_ID,
+  title: 'New blog post',
+  components: [
+    {
+      type: 1,
+      components: [
+        { type: 4, custom_id: 'title', label: 'Title (optional)', style: 1, required: false, max_length: 100 },
+      ],
+    },
+    {
+      type: 1,
+      components: [
+        {
+          type: 4,
+          custom_id: 'content',
+          label: "What's the post?",
+          style: 2,
+          required: true,
+          min_length: WRITE_MIN_CHARS,
+          max_length: WRITE_MAX_CHARS,
+          placeholder: 'Paste or dictate your thoughts - rough is fine. It gets tidied, not rewritten.',
+        },
+      ],
+    },
+  ],
+};
+
+/**
+ * custom_id → value for every text input in a modal submission. Discord nests
+ * inputs in action rows (components[]) or, in newer layouts, labels
+ * (component), so walk both.
+ */
+export function modalValues(components: unknown[]): Record<string, string> {
+  const out: Record<string, string> = {};
+  const visit = (node: unknown) => {
+    if (!node || typeof node !== 'object') return;
+    const c = node as Record<string, unknown>;
+    if (typeof c.custom_id === 'string' && typeof c.value === 'string') out[c.custom_id] = c.value;
+    if (Array.isArray(c.components)) c.components.forEach(visit);
+    if (c.component) visit(c.component);
+  };
+  components.forEach(visit);
+  return out;
+}
 
 const httpUrl = z
   .string()
@@ -77,18 +144,38 @@ export function handleInteraction(body: unknown, deps: BotDeps = defaultDeps): H
   const i = parsed.data;
 
   if (i.type === InteractionType.PING) return { kind: 'reply', response: { type: ResponseType.PONG } };
-  if (i.type !== InteractionType.APPLICATION_COMMAND || i.data?.name !== 'blog') return reply('Unknown command.');
+  const isCommand = i.type === InteractionType.APPLICATION_COMMAND && i.data?.name === 'blog';
+  const isWriteSubmit = i.type === InteractionType.MODAL_SUBMIT && i.data?.custom_id === WRITE_MODAL_ID;
+  if (!isCommand && !isWriteSubmit) return reply('Unknown command.');
 
   const owner = deps.ownerId();
   const caller = i.member?.user.id ?? i.user?.id;
   if (!owner || caller !== owner) return reply('Only the site owner can use /blog.');
   if (!deps.githubConfigured()) return reply('The GitHub App is not configured on this deployment.');
 
-  const sub = i.data.options?.[0];
-  const args = Object.fromEntries((sub?.options ?? []).map((o) => [o.name, o.value]));
   const discord = { discord_app_id: i.application_id, discord_token: i.token };
 
+  if (isWriteSubmit) {
+    const values = modalValues(i.data?.components ?? []);
+    const note = (values.content ?? '').trim();
+    const title = (values.title ?? '').trim();
+    if (note.length < WRITE_MIN_CHARS) return reply(`That's a bit short to make a post from — give it at least ${WRITE_MIN_CHARS} characters.`);
+    const words = note.split(/\s+/).length;
+    return {
+      kind: 'defer',
+      run: async () => {
+        await deps.dispatch({ mode: 'write', note: note.slice(0, WRITE_MAX_CHARS), title: title || undefined, ...discord });
+        return `✍️ Shaping your post${title ? `: **${title}**` : ''} (${words} words).\nI'll edit this message with the PR and preview link — usually 3–6 minutes.`;
+      },
+    };
+  }
+
+  const sub = i.data?.options?.[0];
+  const args = Object.fromEntries((sub?.options ?? []).map((o) => [o.name, o.value]));
+
   switch (sub?.name) {
+    case 'write':
+      return { kind: 'reply', response: { type: ResponseType.MODAL, data: writeModal } };
     case 'new': {
       const url = httpUrl.safeParse(args.url);
       if (!url.success) return reply('That URL does not look right — it must start with http:// or https://.');
@@ -136,6 +223,6 @@ export function handleInteraction(body: unknown, deps: BotDeps = defaultDeps): H
         },
       };
     default:
-      return reply('Unknown subcommand. Try /blog new, revise, publish or list.');
+      return reply('Unknown subcommand. Try /blog write, new, revise, publish or list.');
   }
 }

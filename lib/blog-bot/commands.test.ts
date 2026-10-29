@@ -39,7 +39,25 @@ function deps(overrides: Partial<BotDeps> = {}) {
 
 function replyText(h: Handled) {
   if (h.kind !== 'reply') throw new Error('expected an immediate reply');
-  return h.response.data?.content ?? '';
+  return (h.response.data as { content?: string } | undefined)?.content ?? '';
+}
+
+const draft = 'I keep seeing teams pay for NAT gateways just to reach S3. A gateway endpoint is free and takes ten minutes.';
+
+function writeSubmit(content: string, title = '', userId = OWNER) {
+  return {
+    type: 5,
+    application_id: 'app-1',
+    token: 'tok-1',
+    member: { user: { id: userId } },
+    data: {
+      custom_id: 'blog-write',
+      components: [
+        { type: 1, components: [{ type: 4, custom_id: 'title', value: title }] },
+        { type: 1, components: [{ type: 4, custom_id: 'content', value: content }] },
+      ],
+    },
+  };
 }
 
 async function run(h: Handled) {
@@ -57,7 +75,7 @@ describe('handleInteraction', () => {
     const { d, dispatched } = deps();
     const h = handleInteraction(interaction('new', { url: 'https://example.com' }, '999'), d);
     expect(replyText(h)).toMatch(/only the site owner/i);
-    expect(h.kind === 'reply' && h.response.data?.flags).toBe(64);
+    expect(h.kind === 'reply' && (h.response.data as { flags?: number })?.flags).toBe(64);
     expect(dispatched).toEqual([]);
   });
 
@@ -120,6 +138,52 @@ describe('handleInteraction', () => {
 
   it('says so when the GitHub App is not configured', () => {
     expect(replyText(handleInteraction(interaction('list'), deps({ githubConfigured: () => false }).d))).toMatch(/not configured/);
+  });
+
+  it('write: opens the text-box modal instead of replying', () => {
+    const h = handleInteraction(interaction('write'), deps().d);
+    expect(h.kind === 'reply' && h.response.type).toBe(9);
+    expect(h.kind === 'reply' && h.response.data).toMatchObject({ custom_id: 'blog-write' });
+  });
+
+  it('write submit: dispatches the text and title as a write draft', async () => {
+    const { d, dispatched } = deps();
+    const msg = await run(handleInteraction(writeSubmit(`  ${draft}  `, ' S3 endpoints '), d));
+    expect(msg).toContain('**S3 endpoints**');
+    expect(dispatched).toEqual([
+      { mode: 'write', note: draft, title: 'S3 endpoints', discord_app_id: 'app-1', discord_token: 'tok-1' },
+    ]);
+  });
+
+  it('write submit: no title is fine', async () => {
+    const { d, dispatched } = deps();
+    await run(handleInteraction(writeSubmit(draft), d));
+    expect(dispatched[0].title).toBeUndefined();
+  });
+
+  it('write submit: reads the newer label-wrapped modal layout too', async () => {
+    const { d, dispatched } = deps();
+    const body = writeSubmit(draft);
+    body.data.components = [{ type: 18, component: { type: 4, custom_id: 'content', value: draft } }] as never;
+    await run(handleInteraction(body, d));
+    expect(dispatched[0].note).toBe(draft);
+  });
+
+  it('write submit: too short is refused before deferring', () => {
+    const { d, dispatched } = deps();
+    expect(replyText(handleInteraction(writeSubmit('too short'), d))).toMatch(/at least 50/);
+    expect(dispatched).toEqual([]);
+  });
+
+  it('write submit: only the owner', () => {
+    const { d, dispatched } = deps();
+    expect(replyText(handleInteraction(writeSubmit(draft, '', '999'), d))).toMatch(/only the site owner/i);
+    expect(dispatched).toEqual([]);
+  });
+
+  it('ignores modal submissions from other forms', () => {
+    const body = { ...writeSubmit(draft), data: { custom_id: 'something-else', components: [] } };
+    expect(replyText(handleInteraction(body, deps().d))).toBe('Unknown command.');
   });
 
   it('handles every subcommand registered in command.json', () => {

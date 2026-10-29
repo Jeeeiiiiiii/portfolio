@@ -5,6 +5,11 @@
   "options": [
     {
       "type": 1,
+      "name": "write",
+      "description": "Turn your own thoughts into a post - opens a text box"
+    },
+    {
+      "type": 1,
       "name": "new",
       "description": "Draft a post about an article",
       "options": [

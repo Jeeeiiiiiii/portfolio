@@ -9,9 +9,13 @@ import { BLOG_BRANCH_PREFIX, BLOG_DISPATCH_EVENT } from './config';
  */
 
 export interface DraftRequest {
-  mode: 'new' | 'revise';
+  /** new: about an article · write: Steven's own text, lightly edited · revise: change a draft */
+  mode: 'new' | 'write' | 'revise';
   url?: string;
+  /** new: the angle · write: the post material itself · revise: what to change */
   note: string;
+  /** write: an optional title Steven typed */
+  title?: string;
   pr?: number;
   /** lets the workflow edit the Discord reply when it finishes */
   discord_app_id: string;
