@@ -1,0 +1,38 @@
+{
+  "name": "blog",
+  "description": "Draft and publish portfolio blog posts",
+  "type": 1,
+  "options": [
+    {
+      "type": 1,
+      "name": "new",
+      "description": "Draft a post about an article",
+      "options": [
+        { "type": 3, "name": "url", "description": "The article to write about", "required": true, "max_length": 500 },
+        { "type": 3, "name": "note", "description": "Your angle - rough notes are fine", "required": false, "max_length": 1500 }
+      ]
+    },
+    {
+      "type": 1,
+      "name": "revise",
+      "description": "Change an open draft",
+      "options": [
+        { "type": 4, "name": "pr", "description": "Draft PR number", "required": true, "min_value": 1 },
+        { "type": 3, "name": "note", "description": "What to change", "required": true, "max_length": 1500 }
+      ]
+    },
+    {
+      "type": 1,
+      "name": "publish",
+      "description": "Merge a draft - it goes live",
+      "options": [
+        { "type": 4, "name": "pr", "description": "Draft PR number", "required": true, "min_value": 1 }
+      ]
+    },
+    {
+      "type": 1,
+      "name": "list",
+      "description": "Show open drafts"
+    }
+  ]
+}

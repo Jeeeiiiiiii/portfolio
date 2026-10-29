@@ -1,12 +1,7 @@
-import { App, type Octokit } from 'octokit';
+import type { Octokit } from 'octokit';
+import { installationClient as client } from '@/lib/github-app';
 import { visitorsFileSchema, type VisitorCard } from '@/lib/visitors-schema';
-import {
-  REPO,
-  VISITORS_FILE,
-  VISITOR_BRANCH_PREFIX,
-  VISITOR_PR_LABEL,
-  githubAppConfig,
-} from './config';
+import { REPO, VISITORS_FILE, VISITOR_BRANCH_PREFIX, VISITOR_PR_LABEL } from './config';
 
 /**
  * The GitHub adapter for the visitor playground. Two operations: open a PR
@@ -30,22 +25,6 @@ export interface PrStatus {
   checks: ChecksSummary;
   previewUrl: string | null;
   mergedAt: string | null;
-}
-
-let cached: Promise<Octokit> | null = null;
-
-async function client(): Promise<Octokit> {
-  if (cached) return cached;
-  const cfg = githubAppConfig();
-  if (!cfg) throw new Error('github_not_configured');
-  const app = new App({ appId: cfg.appId, privateKey: cfg.privateKey });
-  const pending = app.getInstallationOctokit(cfg.installationId) as Promise<Octokit>;
-  cached = pending;
-  // A failed auth must not be cached, or every later request inherits the failure.
-  pending.catch(() => {
-    if (cached === pending) cached = null;
-  });
-  return pending;
 }
 
 function assertAllowedPath(path: string) {

@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# blog bot scratch space (the workflow fetches the article here)
+/.blog-bot/
