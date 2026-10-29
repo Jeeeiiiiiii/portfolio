@@ -8,6 +8,7 @@ Personal site — [stevencarreon on Vercel](https://final-portfolio.vercel.app).
 ```
 app/                 routes: / (about), /projects, /projects/[slug], /blog, /resume, /contact, /visitors
 app/api/visitors/    submit (POST) and status (GET) — the visitor playground write path
+content/blog/        one markdown file per post; lib/blog.ts reads them
 content/projects.ts  every project, one typed module; the grid, detail pages and resume read it
 content/work.ts      the "at work now" highlights on the about page
 content/visitors.json  the guestbook — edited only through pull requests
@@ -34,6 +35,10 @@ Without them the site builds and runs; the visitor form shows a "submissions ope
 - **A project** — add an entry to `content/projects.ts`. It appears on `/projects`, gets a page at
   `/projects/<slug>`, and (if `status: 'shipped'`) is listed on `/resume`. If it has an archify
   diagram, drop the HTML in `public/diagrams/` and set `links.diagram`.
+- **A blog post** — add `content/blog/<slug>.md` (lowercase-hyphenated filename = URL). Frontmatter:
+  `title`, `date` (YYYY-MM-DD), `excerpt`, `tags`, and optionally `image` (path under `public/`),
+  `source` (the article it responds to) and `draft: true` (dev only). `lib/blog.ts` validates the
+  frontmatter, renders the markdown, sanitises the HTML and builds the table of contents from `##` headings.
 - **Work highlights** — `content/work.ts`. Written for a public site: no client names, tickets or hostnames.
 - **Visitor cards** — never by hand; they arrive as PRs labelled `visitor-submission`.
 
