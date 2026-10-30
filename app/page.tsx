@@ -4,6 +4,9 @@ import { SiAmazonwebservices, SiKubernetes, SiHelm, SiTerraform, SiDocker, SiArg
 import { VscAzure } from 'react-icons/vsc';
 import Footer from '@/components/Footer';
 import { workContext, workHighlights } from '@/content/work';
+import { formatPostDate, getAllPosts } from '@/lib/blog';
+
+const LATEST_POSTS = 3;
 
 export const metadata = {
   title: "Devops Engineer | Steven Carreon",
@@ -96,6 +99,9 @@ const experience = [
 ];
 
 export default function AboutPage() {
+  const posts = getAllPosts();
+  const latest = posts.slice(0, LATEST_POSTS);
+
   return (
     <div className="min-h-screen">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-14 stagger">
@@ -141,9 +147,36 @@ export default function AboutPage() {
           </div>
         </section>
 
+        {/* Writing — the newest posts, straight under the intro */}
+        {latest.length > 0 && (
+          <section className="mb-14">
+            <div className="flex items-baseline justify-between gap-4 mb-5">
+              <h2 className="section-label">01 — writing</h2>
+              {posts.length > LATEST_POSTS && (
+                <Link href="/blog" className="micro hover:text-ink transition-colors duration-200">
+                  all {posts.length} posts →
+                </Link>
+              )}
+            </div>
+            <div className="divide-y divide-gray-200 border-y border-gray-200">
+              {latest.map((post) => (
+                <Link key={post.slug} href={`/blog/${post.slug}`} className="group block py-5">
+                  <div className="flex justify-between items-baseline gap-4 mb-1">
+                    <h3 className="font-semibold tracking-tight group-hover:underline underline-offset-2 decoration-gray-300">
+                      {post.title}
+                    </h3>
+                    <span className="micro shrink-0">{formatPostDate(post.date)}</span>
+                  </div>
+                  <p className="text-[13px] text-gray-500 leading-relaxed line-clamp-2">{post.excerpt}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Stack */}
         <section className="mb-14">
-          <h2 className="section-label mb-5">01 — stack</h2>
+          <h2 className="section-label mb-5">02 — stack</h2>
           <div className="flex flex-wrap gap-2 border-y border-gray-200 py-4">
             {techIcons.map((tech) => (
               <div
@@ -159,7 +192,7 @@ export default function AboutPage() {
 
         {/* At work now */}
         <section className="mb-14">
-          <h2 className="section-label mb-5">02 — at work now</h2>
+          <h2 className="section-label mb-5">03 — at work now</h2>
           <p className="text-[13px] text-gray-500 leading-relaxed mb-6 max-w-lg">{workContext}</p>
           <div className="divide-y divide-gray-200 border-y border-gray-200">
             {workHighlights.map((item) => (
@@ -181,7 +214,7 @@ export default function AboutPage() {
 
         {/* Experience */}
         <section className="mb-14">
-          <h2 className="section-label mb-5">03 — experience</h2>
+          <h2 className="section-label mb-5">04 — experience</h2>
           <div className="divide-y divide-gray-200 border-y border-gray-200">
             {experience.map((job) => (
               <div key={job.title} className="py-6">
@@ -202,7 +235,7 @@ export default function AboutPage() {
 
         {/* GitHub */}
         <section className="mb-14">
-          <h2 className="section-label mb-5">04 — github</h2>
+          <h2 className="section-label mb-5">05 — github</h2>
           <div className="border border-gray-200 rounded-2xl p-5 bg-gray-50 shadow-[var(--shadow-card)]">
             <Image
               src="http://ghchart.rshah.org/Jeeeiiiiiii"
@@ -217,7 +250,7 @@ export default function AboutPage() {
 
         {/* Certifications */}
         <section>
-          <h2 className="section-label mb-5">05 — certifications</h2>
+          <h2 className="section-label mb-5">06 — certifications</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {certifications.map((cert) => (
               <a

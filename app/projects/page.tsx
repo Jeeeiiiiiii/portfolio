@@ -56,7 +56,7 @@ export default function ProjectsPage() {
           <p className="micro">02 — selected work</p>
           <p className="text-gray-500 mt-4 max-w-md text-[13px] leading-relaxed">
             Each lab is a small application whose only job is to make one part of a platform
-            visible. All three run on one machine against a local AWS emulator, so the Terraform
+            visible. All of them run on one machine against a local AWS emulator, so the Terraform
             is written for a real account and costs nothing to run.
           </p>
         </header>
@@ -64,7 +64,7 @@ export default function ProjectsPage() {
         <section className="mb-12">
           <div className="flex items-baseline justify-between border-b border-gray-200 pb-4 mb-6">
             <h2 className="section-label">01 — infrastructure labs</h2>
-            <span className="micro">{labs.length} labs · verified end to end</span>
+            <span className="micro">{labs.length} labs · verified end to end on a local emulator</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {labs.map((p) => (

@@ -1,0 +1,301 @@
+name: Blog draft
+
+# Started by the Discord /blog command (a repository_dispatch sent from
+# app/api/discord/interactions) or by hand from the Actions tab.
+# Claude writes or edits exactly one content/blog/*.md file; every git and
+# GitHub step is done here, by this workflow. Nothing goes live until the PR
+# is merged.
+
+on:
+  repository_dispatch:
+    types: [blog-draft]
+  workflow_dispatch:
+    inputs:
+      mode:
+        type: choice
+        options: [new, write, revise]
+        default: new
+      url:
+        description: 'new: the article to write about'
+        required: false
+      note:
+        description: 'new: your angle · write: the post itself · revise: what to change'
+        required: false
+      title:
+        description: 'write: optional title'
+        required: false
+      pr:
+        description: 'revise: the draft PR number'
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  deployments: read
+
+concurrency:
+  group: blog-draft-${{ github.event.client_payload.pr || inputs.pr || github.run_id }}
+
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Every request field reaches the scripts as an env var, never as ${{ }}
+    # inside run:, so nothing typed in Discord can become shell code.
+    env:
+      MODE: ${{ github.event.client_payload.mode || inputs.mode }}
+      SOURCE_URL: ${{ github.event.client_payload.url || inputs.url }}
+      NOTE: ${{ github.event.client_payload.note || inputs.note }}
+      TITLE_HINT: ${{ github.event.client_payload.title || inputs.title }}
+      PR: ${{ github.event.client_payload.pr || inputs.pr }}
+      BASE_BRANCH: ${{ github.event.repository.default_branch }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      # The Discord token is read from the event file, not the job env, so it
+      # is never printed in this public log; masking covers anything after.
+      - name: Mask the Discord reply token
+        run: |
+          token=$(jq -r '.client_payload.discord_token // empty' "$GITHUB_EVENT_PATH")
+          if [ -n "$token" ]; then echo "::add-mask::$token"; fi
+
+      - name: Validate the request
+        run: |
+          case "$MODE" in
+            new)
+              [[ "$SOURCE_URL" =~ ^https?://[^[:space:]]+$ ]] || { echo "::error::url must be an http(s) URL"; exit 1; } ;;
+            write)
+              [ "${#NOTE}" -ge 50 ] || { echo "::error::write needs the post text (at least 50 characters)"; exit 1; } ;;
+            revise)
+              [[ "$PR" =~ ^[0-9]+$ ]] || { echo "::error::pr must be a number"; exit 1; }
+              [ -n "$NOTE" ] || { echo "::error::revise needs a note"; exit 1; } ;;
+            *)
+              echo "::error::mode must be new or revise"; exit 1 ;;
+          esac
+
+      # Pushes and PRs made with the default GITHUB_TOKEN don't trigger other
+      # workflows, so CI and the PR guard would never run on the draft. The
+      # App token avoids that; without it the draft still works, unchecked.
+      - name: GitHub App token
+        id: app
+        if: vars.BLOG_APP_ID != ''
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.BLOG_APP_ID }}
+          private-key: ${{ secrets.BLOG_APP_PRIVATE_KEY }}
+
+      - name: Find the draft
+        id: target
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token || github.token }}
+        run: |
+          if [ "$MODE" != revise ]; then
+            echo "ref=$BASE_BRANCH" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          info=$(gh pr view "$PR" -R "$GITHUB_REPOSITORY" --json headRefName,state,files)
+          ref=$(jq -r .headRefName <<<"$info")
+          state=$(jq -r .state <<<"$info")
+          file=$(jq -r '.files[].path' <<<"$info" | grep -E '^content/blog/[a-z0-9]+(-[a-z0-9]+)*\.md$' | head -1 || true)
+          [[ "$ref" == blog/* ]] || { echo "::error::#$PR is not a blog draft"; exit 1; }
+          [ "$state" = OPEN ] || { echo "::error::#$PR is $state"; exit 1; }
+          [ -n "$file" ] || { echo "::error::#$PR has no content/blog post"; exit 1; }
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "file=$file" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.target.outputs.ref }}
+          token: ${{ steps.app.outputs.token || github.token }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fetch the article
+        if: env.MODE == 'new'
+        run: |
+          mkdir -p .blog-bot
+          curl -sSfL --max-time 60 -H 'X-Return-Format: markdown' "https://r.jina.ai/$SOURCE_URL" -o .blog-bot/raw.md
+          head -c 150000 .blog-bot/raw.md > .blog-bot/article.md
+          [ -s .blog-bot/article.md ] || { echo "::error::the article came back empty"; exit 1; }
+          echo "fetched $(wc -c < .blog-bot/article.md) bytes"
+
+      - name: Write the task
+        env:
+          POST_FILE: ${{ steps.target.outputs.file }}
+        run: |
+          mkdir -p .blog-bot
+          {
+            cat .github/blog-bot/prompt.md
+            echo
+            echo "## This run"
+            echo
+            echo "- Mode: $MODE"
+            echo "- Today: $(date -u +%F)"
+            case "$MODE" in
+              new)
+                echo "- Source URL (the \`source\` frontmatter field): $SOURCE_URL"
+                echo "- The article, as markdown: .blog-bot/article.md"
+                echo "- Steven's note (his own words; may be rough or empty):" ;;
+              write)
+                echo "- Title Steven gave (may be empty): ${TITLE_HINT:-}"
+                echo "- Steven's draft — the material for the post, in his words:" ;;
+              revise)
+                echo "- The post to edit: $POST_FILE"
+                echo "- What Steven wants changed (his own words):" ;;
+            esac
+            echo '"""'
+            printf '%s\n' "$NOTE"
+            echo '"""'
+          } > .blog-bot/task.md
+
+      - name: Draft with Claude
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          # whichever secret is set is the one Claude Code uses
+          [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ] || unset CLAUDE_CODE_OAUTH_TOKEN
+          [ -n "$ANTHROPIC_API_KEY" ] || unset ANTHROPIC_API_KEY
+          npm install -g @anthropic-ai/claude-code
+          # file tools only: no shell, no network, so the article can't make it do anything else
+          claude -p "Read .blog-bot/task.md and do exactly what it says." \
+            --allowedTools "Read,Write,Edit,Glob,Grep" \
+            --disallowedTools "Bash,WebFetch,WebSearch" \
+            --max-turns 30
+
+      - name: Check what changed
+        id: post
+        env:
+          POST_FILE: ${{ steps.target.outputs.file }}
+        run: |
+          rm -rf .blog-bot
+          changed=$(git status --porcelain --untracked-files=all)
+          printf '%s\n' "$changed"
+          count=$(printf '%s\n' "$changed" | grep -c . || true)
+          [ "$count" = 1 ] || { echo "::error::expected exactly one changed file, got $count"; exit 1; }
+          file=$(printf '%s' "$changed" | cut -c4-)
+          [[ "$file" =~ ^content/blog/[a-z0-9]+(-[a-z0-9]+)*\.md$ ]] || { echo "::error::$file is not a content/blog post"; exit 1; }
+          if [ "$MODE" = revise ] && [ "$file" != "$POST_FILE" ]; then
+            echo "::error::revise changed $file instead of $POST_FILE"; exit 1
+          fi
+          if [ "$MODE" != revise ] && git cat-file -e "HEAD:$file" 2>/dev/null; then
+            echo "::error::$file already exists; a new draft must be a new file"; exit 1
+          fi
+          title=$(sed -n 's/^title:[[:space:]]*//p' "$file" | head -1 | sed -E "s/^[\"']//; s/[\"']$//")
+          {
+            echo "file=$file"
+            echo "slug=$(basename "$file" .md)"
+            echo "title=$title"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Validate the post
+        run: npx vitest run lib/blog.test.ts
+
+      - name: Commit and push
+        id: push
+        env:
+          FILE: ${{ steps.post.outputs.file }}
+          SLUG: ${{ steps.post.outputs.slug }}
+          DRAFT_REF: ${{ steps.target.outputs.ref }}
+        run: |
+          # authored as Steven: it's his post, and Vercel won't deploy commits from unknown authors
+          git config user.name "Steven Carreon"
+          git config user.email "82487395+Jeeeiiiiiii@users.noreply.github.com"
+          if [ "$MODE" != revise ]; then
+            branch="blog/$SLUG"
+            if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
+              echo "::error::branch $branch already exists"; exit 1
+            fi
+            git switch -c "$branch"
+            msg="blog: draft $SLUG"
+          else
+            branch="$DRAFT_REF"
+            msg="blog: revise $SLUG"
+          fi
+          git add "$FILE"
+          git commit -m "$msg" -m "Drafted by the blog bot ($RUN_URL)."
+          git push origin "$branch"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Open or update the PR
+        id: pr
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token || github.token }}
+          BRANCH: ${{ steps.push.outputs.branch }}
+          TITLE: ${{ steps.post.outputs.title }}
+        run: |
+          if [ "$MODE" = revise ]; then
+            body=$(printf 'Revised by the blog bot ([run](%s)):\n\n```\n%s\n```\n' "$RUN_URL" "$NOTE")
+            gh pr comment "$PR" --body "$body"
+            echo "number=$PR" >> "$GITHUB_OUTPUT"
+            echo "url=$(gh pr view "$PR" --json url -q .url)" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          gh label create blog-draft --color 0e8a16 --description "Draft from the Discord blog bot" 2>/dev/null || true
+          if [ "$MODE" = write ]; then
+            origin="your own draft"; label="Your text"
+          else
+            origin="$SOURCE_URL"; label="Note"
+          fi
+          body=$(printf 'Drafted by the blog bot from %s ([run](%s)).\n\n%s:\n```\n%s\n```\n\nMerge — or `/blog publish` in Discord — to publish. Change it with `/blog revise`.\n' "$origin" "$RUN_URL" "$label" "$NOTE")
+          url=$(gh pr create --base "$BASE_BRANCH" --head "$BRANCH" --title "Blog draft: $TITLE" --body "$body" --label blog-draft)
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "number=${url##*/}" >> "$GITHUB_OUTPUT"
+
+      # Vercel records a GitHub Deployment per pushed commit; its success status carries the preview URL.
+      - name: Wait for the Vercel preview
+        id: preview
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token || github.token }}
+          SHA: ${{ steps.push.outputs.sha }}
+        run: |
+          for _ in $(seq 1 24); do
+            id=$(gh api "repos/$GITHUB_REPOSITORY/deployments?sha=$SHA&per_page=1" -q '.[0].id // empty' 2>/dev/null || true)
+            if [ -n "$id" ]; then
+              url=$(gh api "repos/$GITHUB_REPOSITORY/deployments/$id/statuses" \
+                -q '[.[] | select(.state == "success")][0].environment_url // empty' 2>/dev/null || true)
+              if [ -n "$url" ]; then echo "url=$url" >> "$GITHUB_OUTPUT"; exit 0; fi
+            fi
+            sleep 15
+          done
+          echo "no preview within 6 minutes; it will still appear on the PR"
+
+      - name: Report back to Discord
+        if: always()
+        env:
+          OUTCOME: ${{ job.status }}
+          TITLE: ${{ steps.post.outputs.title }}
+          SLUG: ${{ steps.post.outputs.slug }}
+          PR_URL: ${{ steps.pr.outputs.url }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          PREVIEW: ${{ steps.preview.outputs.url }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [ "$OUTCOME" = success ] && [ -n "$PR_URL" ]; then
+            verb=$([ "$MODE" = revise ] && echo "Revised" || echo "Draft ready")
+            preview=$([ -n "$PREVIEW" ] && echo "<${PREVIEW%/}/blog/$SLUG>" || echo "still building — it'll show up on the PR")
+            msg=$(printf '📝 %s: **%s**\nPreview: %s\nPR: <%s>\nPublish: `/blog publish pr:%s` · change it: `/blog revise pr:%s note:…`' \
+              "$verb" "$TITLE" "$preview" "$PR_URL" "$PR_NUMBER" "$PR_NUMBER")
+          else
+            msg="⚠️ The blog draft failed. Log: <$RUN_URL>"
+          fi
+          payload=$(jq -n --arg c "$msg" '{content: $c, allowed_mentions: {parse: []}}')
+          token=$(jq -r '.client_payload.discord_token // empty' "$GITHUB_EVENT_PATH")
+          app=$(jq -r '.client_payload.discord_app_id // empty' "$GITHUB_EVENT_PATH")
+          # the interaction token lasts 15 minutes; past that, fall back to a channel webhook
+          if [ -n "$token" ] && curl -sSf -X PATCH -H 'Content-Type: application/json' -d "$payload" \
+              "https://discord.com/api/v10/webhooks/$app/$token/messages/@original" -o /dev/null; then
+            exit 0
+          fi
+          if [ -n "$DISCORD_WEBHOOK_URL" ]; then
+            curl -sSf -H 'Content-Type: application/json' -d "$payload" "$DISCORD_WEBHOOK_URL" -o /dev/null
+          else
+            echo "$msg"
+          fi
