@@ -1,11 +1,11 @@
 ---
-title: "How a bank decides a new model is allowed to go live (part 1: the design)"
+title: "How a bank decides a new model is allowed to go live — the plan"
 date: 2026-11-11
 excerpt: At a regulated company, a model can't go live because its author says it's better. This is the design for Model Sign-off, a release process where every new model is tested against the current one, approved by a risk reviewer in a pull request, and leaves evidence an auditor can read.
 tags: [MLOps, Governance, MLflow, Design]
 ---
 
-*What you'll get: the problem a model release process solves, the design I'm building, and what I'll measure. Nothing here is built yet; part 2 will have the results.*
+*What you'll get: the problem a model release process solves, the design I'm building, and what I'll measure. This is a plan for a project I'm building now. Nothing here is built yet; a follow-up post will show what happened.*
 
 ## The problem, in plain words
 
@@ -75,7 +75,7 @@ A challenger that wins on overall accuracy but fails the stability check on the 
 
 ## What I'll measure
 
-No numbers yet. These are the ones part 2 will report:
+No numbers yet. These are the ones the follow-up post will report:
 
 - **Steps and minutes to onboard the second model,** compared with the first.
 - **Time from "training finished" to "ready for approval".**
@@ -97,4 +97,4 @@ A model release process that leaves evidence turns an audit from weeks of diggin
 
 - [MLflow model registry aliases](https://mlflow.org/docs/latest/)
 - [The project page](/projects/model-signoff)
-- Part 2, with results, comes once it's built.
+- A follow-up post, with results, comes once it's built.

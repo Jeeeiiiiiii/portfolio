@@ -1,11 +1,11 @@
 ---
-title: "From trained model to live endpoint in one pull request (part 1: the design)"
+title: "From trained model to live endpoint in one pull request — the plan"
 date: 2026-11-11
 excerpt: Data scientists can train a model in a day, then wait weeks for infrastructure. This is the design for my Model Hosting Platform, one supported path where a team adds one file and gets an endpoint with gradual rollout, automatic rollback, scale-to-zero and cost per team.
 tags: [MLOps, Platform Engineering, KServe, Design]
 ---
 
-*What you'll get: why teams need one supported way to host models, the design I'm building, and what I'll measure. Nothing here is built yet; part 2 will have the results.*
+*What you'll get: why teams need one supported way to host models, the design I'm building, and what I'll measure. This is a plan for a project I'm building now. Nothing here is built yet; a follow-up post will show what happened.*
 
 ## The problem, in plain words
 
@@ -75,7 +75,7 @@ A new model version that's correct but slow. The canary should see p95 latency b
 
 ## What I'll measure
 
-No numbers yet. Part 2 will report:
+No numbers yet. The follow-up post will report:
 
 - **Time from merging the pull request to a live endpoint.**
 - **Cold start:** how long the first request waits after scale-to-zero.
