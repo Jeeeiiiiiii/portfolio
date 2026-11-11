@@ -1,16 +1,18 @@
 ---
-title: Why retrying a failed payment can charge a customer twice
+title: "Testing a payment platform's failover by breaking it on purpose"
 date: 2026-11-11
-excerpt: Payment apps fail over to a backup provider so customers can still pay. I broke a provider on purpose, eight different ways, to see when that failover takes the money twice, and built the job and alerts that catch it.
+excerpt: I ran an open-source payment app and broke its providers eight different ways to see what failover really does. It keeps customers paying, but in some failures it charges them twice. How I found it, the retry policy I chose, and the monitoring I built to catch the rest.
 tags: [Payments, SRE, Kubernetes, Observability]
 featured: 2
 ---
 
-*What you'll get: when payment failover causes double charges, how to choose a retry policy, and how to catch what the policy lets through.*
+*What you'll get: how I tested failover in a system I didn't write, the trade-off it exposed, and the monitoring and alerts I built around it.*
 
 ## The problem, in plain words
 
-An online shop doesn't talk to Visa directly. It sends each card payment to a **payment provider**, a company that moves the money. Providers have outages, so many shops use a **payment orchestrator**: one app that sits in front of several providers and, when one fails, tries the next. The customer sees a successful payment and never knows anything went wrong.
+This is a platform engineer's job, not a payments developer's: take an application you didn't write, run it, break it on purpose, and find out what it really does when its dependencies fail. Then build the monitoring that tells you when that happens for real.
+
+The application here is a payment app. A quick word on how it works, because the failure depends on it. An online shop doesn't talk to Visa directly. It sends each card payment to a **payment provider**, a company that moves the money. Providers have outages, so many shops use a **payment orchestrator**: one app that sits in front of several providers and, when one fails, tries the next. The customer sees a successful payment and never knows anything went wrong.
 
 That's the theory. In practice, "the provider returned an error" doesn't mean "the provider did nothing". A provider can take the money and then fail to say so: its server crashes after charging, or the connection hangs. If the orchestrator then retries on a backup provider, the customer is charged twice. And the shop sees one clean "succeeded".
 

@@ -356,7 +356,7 @@ export const projects: Project[] = [
     links: { post: 'hybrid-training-platform-design' },
     purpose: [
       'Companies that own servers want to use them first, because they are already paid for, and rent cloud capacity only for the peaks. It is also how most cloud migrations start: gradually, one workload at a time. The hard part is making the same job run in both places without engineers choosing where.',
-      'Modelled on how Uber put one job controller in front of many clusters while moving ML to the cloud, at a size one person can build and run.',
+      'It practises the middle stage of a cloud migration, where old servers and the cloud run side by side and one queue decides where each job goes.',
     ],
     ascii: `   engineer ─▶ training job (same YAML everywhere)
                   │

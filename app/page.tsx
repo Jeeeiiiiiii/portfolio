@@ -114,8 +114,12 @@ export default function AboutPage() {
               <h1 className="page-title mb-3">aurjei steven carreon</h1>
               <p className="micro !text-[11px] mb-4">cloud / devops engineer</p>
               <p className="text-gray-500 mb-6 max-w-md">
-                I run platforms — Kubernetes, GitOps, observability — and build small labs to
-                understand the pieces underneath them.
+                I&apos;m a cloud and DevOps engineer focused on reliability in fintech: payment and
+                trading systems that have to stay up and get the money right. I enjoy system
+                design: shaping a system around what the business needs, then making it simpler and
+                cheaper to run. On the side I build MLOps platforms that train, release and monitor
+                models, because I want to understand how AI gets delivered and deployed to
+                production.
               </p>
               <div className="flex flex-wrap items-center gap-5">
                 <Link

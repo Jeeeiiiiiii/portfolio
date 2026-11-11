@@ -1,7 +1,7 @@
 ---
-title: My fraud model read "visa" as 7412 and still answered 200 OK
+title: "My fraud model looked healthy but was reading the data wrong"
 date: 2026-11-11
-excerpt: The most common way a machine learning model fails in production is not a crash. It is a model quietly reading different inputs from the ones it learned on. Here is how I found that in my fraud project, and the tests that now stop it.
+excerpt: Every health check was green, yet my fraud model was making decisions on scrambled data, like a translator using the wrong dictionary. This is the most common way machine learning fails in production. How I found it, and the tests that now stop it.
 tags: [MLOps, Fraud Detection, MLflow, Testing]
 featured: 1
 ---
@@ -14,7 +14,9 @@ Every time you pay by card, a fraud model has a few milliseconds to decide: let 
 
 I built a fraud scoring system to learn how teams run models like this in production. It had everything you see in architecture diagrams: a feature store, a model registry, a scoring API, dashboards. It started, it answered every request with `200 OK`, and the scores looked reasonable.
 
-It was also reading nonsense. The scoring service turned the card network "visa" into the number 7412. During training, the same word had been turned into 2. The model had learned what 2 means. It had never seen 7412.
+It was also reading the data wrong.
+
+Models only understand numbers, so words like "visa" or "mastercard" get turned into numbers first. Think of it as a dictionary: during training, "visa" was looked up and became **2**. In the live system, a different piece of code used a different dictionary, and "visa" became **7412**. The model had learned what 2 means. It had never seen 7412, so it was guessing, on every payment, while every health check stayed green.
 
 ## Why this is different from a normal bug
 

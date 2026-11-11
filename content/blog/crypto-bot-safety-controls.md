@@ -1,14 +1,27 @@
 ---
-title: "Trading platform notes: keeping bots isolated, stoppable and watched"
+title: "Running trading bots on Kubernetes: isolated, stoppable and watched"
 date: 2026-11-11
-excerpt: Short notes from my trading-bot lab on the controls that matter most - bots that can't reach the internet, a broker where each bot only hears its own commands, secrets encrypted in Git, and a halt only a person can lift.
+excerpt: The platform decisions I made to run trading bots safely without changing their code - network rules that let a bot reach only two services, per-bot permissions on the message broker, secrets encrypted in Git, and a stop that only a person can undo.
 tags: [Crypto, Security, Kubernetes, GitOps]
 featured: 5
 ---
 
-*What you'll get: six controls from my trading platform, each with what it stops and the check that proves it.*
+*What you'll get: six platform decisions, what each one stops, what I chose against, and the test that proves it.*
 
-This is a companion to [My trading bot kept quoting on frozen prices](/blog/crypto-bot-frozen-prices). That post is about bad market data; this one is about the platform underneath. It runs two Hummingbot bots, an open-source trading bot, on a local Kubernetes cluster. Paper trading only: a mock exchange, no exchange accounts, no API keys, no real orders.
+My job here was the platform around the bots, not the trading. [The guard post](/blog/crypto-bot-frozen-prices) covers how I stop a bot on bad data; this one covers how the bots are run. The bots are Hummingbot, an open-source trading bot, two of them on a local Kubernetes cluster. Paper trading only: a mock exchange, no exchange accounts, no API keys, no real orders.
+
+## The decisions at a glance
+
+| Decision | What I chose against | Why |
+|---|---|---|
+| Safety checks live in a separate guard service | Patching the bot | The bot stays an unmodified upstream image, so upgrades stay easy, and the checks don't share its blind spots |
+| The stop is stored where only the guard can write | A flag inside the bot | It survives restarts, redeploys and GitOps syncs |
+| Network rules allow exactly two destinations | Open outbound traffic | A pod that would hold exchange keys can't send them anywhere else |
+| Secrets encrypted in Git with SOPS, decrypted by Flux | Secrets created by hand | Everything is reproducible from Git, and readers of the repo see only ciphertext |
+| Broker logins with per-bot topic rules | A shared broker anyone can publish to | One bot can't start, stop or read another |
+| Flux deploys from Git | `kubectl apply` by hand | Drift is undone, and a config change rolled out in 39 seconds |
+
+The rest of this post is each decision in more detail, with the test that proves it.
 
 ## 1. A bot can only reach two things
 

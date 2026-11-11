@@ -1,14 +1,27 @@
 ---
-title: "Payments platform notes: what keeps it secure and running"
+title: "The cloud decisions behind a payments platform that is safe to deploy and hard to break"
 date: 2026-11-11
-excerpt: Short notes from my payments lab on the controls that matter most - only signed images can run, Git is the only way in, pods can only talk to who they need, and alerts that still work when things fail.
+excerpt: The DevOps choices I made around a payments app, and why - only signed images can run, Git is the only way to change the cluster, pods reach only what they need, and alerts keep working when parts fail. Each with the alternative I rejected and the check that proves it.
 tags: [Payments, Security, Kubernetes, Supply Chain]
 featured: 4
 ---
 
-*What you'll get: six controls from my payments platform, each with what it stops and the check that proves it works.*
+*What you'll get: six platform decisions, what each one stops, what I chose against, and the test that proves it works.*
 
-This is a companion to [Why retrying a failed payment can charge a customer twice](/blog/payments-retries-double-charge). That post is about money; this one is about the platform underneath. Everything here runs on a local Kubernetes cluster (kind) around Hyperswitch, an open-source payment app. The design is PCI DSS-inspired, not certified, and no real card data is involved.
+My job on this project was the platform, not the payment app. The app is Hyperswitch, open source and used as is. [The failover post](/blog/payments-retries-double-charge) covers how I tested it; this one covers how I run it. Everything here runs on a local Kubernetes cluster (kind). The design is PCI DSS-inspired, not certified, and no real card data is involved.
+
+## The decisions at a glance
+
+| Decision | What I chose against | Why |
+|---|---|---|
+| The cluster refuses unsigned images at admission | Scanning only in the CI pipeline | A pipeline step can be skipped; the cluster's own check can't |
+| Argo CD pulls changes from Git | A pipeline that runs `kubectl` with cluster credentials | No cluster keys in CI, and manual changes are undone automatically |
+| Every network path closed unless allowed | An open cluster network | A compromised pod can only reach what it already needed |
+| Tools pinned by digest, actions by commit | Version tags | A tag can be moved to malicious code; a digest can't |
+| Webhook URL read from a file at send time | Environment variable or config in Git | Never in Git, and it can rotate without a restart |
+| One alert config for Docker Compose and Kubernetes | Separate configs per environment | One place to change, and the tests cover both |
+
+The rest of this post is each decision in more detail, with the test that proves it.
 
 ## 1. Only images I built and signed can start
 

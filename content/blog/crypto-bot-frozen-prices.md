@@ -1,16 +1,18 @@
 ---
-title: My trading bot kept quoting on frozen prices, and never said a word
+title: "Building a safety net around trading bots I couldn't change"
 date: 2026-11-11
-excerpt: I froze a trading bot's market data while the price fell 3%. It kept quoting around the old price, every quote on the wrong side of the market, and logged nothing. Here is the guard that now stops it, and why a halt has to survive a restart.
+excerpt: I broke a trading bot's price feed on purpose and found it kept trading blind without a single warning. As the platform engineer I couldn't change the bot, so I built around it - an outside guard that stops it in 5 seconds, a stop that survives restarts, and alerts.
 tags: [Crypto, SRE, Kubernetes, Reliability]
 featured: 3
 ---
 
-*What you'll get: why a trading bot can't be trusted to notice its own bad data, and how to stop it from the outside in a way that sticks.*
+*What you'll get: how I tested an app I didn't write, found a silent failure, and designed a platform-side fix that stops it within seconds and stays stopped.*
 
 ## The problem, in plain words
 
-A **market-making bot** places a buy order a little below the current price and a sell order a little above it, and earns the gap when both fill. It replaces those orders every few seconds as the price moves. Everything depends on knowing the current price.
+Picture a platform team asked to run trading bots that someone else wrote. You can't change the bots' code. What you own is everything around them: where they run, what they can reach, how they're deployed, how you know they're healthy, and how you stop them when something goes wrong. That was my role in this project.
+
+A quick word on what the bot does, because the failure depends on it. A **market-making bot** places a buy order a little below the current price and a sell order a little above it, and earns the gap when both fill. It replaces those orders every few seconds as the price moves. Everything depends on knowing the current price.
 
 Prices arrive over a **WebSocket**, a connection that stays open and streams updates. I wanted to know what happens when that stream goes quiet, so I built a lab around **Hummingbot**, an open-source trading bot, and froze its feed on purpose. This is infrastructure around an existing open-source bot, not a trading strategy, and it's paper trading only: a mock exchange, no exchange accounts, no API keys, no real orders.
 
