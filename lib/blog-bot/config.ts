@@ -1,6 +1,6 @@
 /**
  * Environment for the Discord blog bot. Read here and nowhere else.
- * The GitHub side reuses the visitor playground's App (lib/visitors/config.ts).
+ * The GitHub side uses the GitHub App configured in lib/github-config.ts.
  */
 
 /** Draft PRs live on blog/<slug> branches and may only touch content/blog/*.md (blog-pr-guard.yml). */

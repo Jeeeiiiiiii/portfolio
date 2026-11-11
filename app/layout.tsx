@@ -29,7 +29,7 @@ const geistPixel = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'Steven Carreon — DevOps Engineer',
+  title: 'Aurjei Steven Carreon — DevOps Engineer',
   description: 'Personal portfolio showcasing my projects and skills',
 };
 

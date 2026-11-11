@@ -4,7 +4,7 @@ import Footer from '@/components/Footer';
 import { formatPostDate, getAllPosts } from '@/lib/blog';
 
 export const metadata = {
-  title: "Blog | Steven Carreon",
+  title: "Blog | Aurjei Steven Carreon",
   description: "Read my latest thoughts, tutorials, and insights on web development and devops engineering",
 };
 

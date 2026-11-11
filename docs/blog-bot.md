@@ -50,7 +50,7 @@ Do this after the branch is merged: `repository_dispatch` only runs workflows th
 
 ### 1. GitHub App
 
-The visitor playground's App works (see `.env.example`). It needs, on this repo only:
+Create a GitHub App installed on this repo only (env vars in `.env.example`). It needs:
 **Contents: write**, **Pull requests: write**, **Deployments: read**.
 
 - Vercel → Production env: `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`, `GITHUB_APP_PRIVATE_KEY`.

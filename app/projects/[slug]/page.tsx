@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: Params }) {
   const project = getProject((await params).slug);
   if (!project) return { title: 'Project not found' };
   return {
-    title: `${project.title} | Steven Carreon`,
+    title: `${project.title} | Aurjei Steven Carreon`,
     description: project.summary,
   };
 }
@@ -81,6 +81,14 @@ export default async function ProjectPage({ params }: { params: Params }) {
               >
                 view code ↗
               </a>
+            )}
+            {project.links.post && (
+              <Link
+                href={`/blog/${project.links.post}`}
+                className="bg-ink text-background text-xs px-4 py-2 rounded-md hover:opacity-90 transition-opacity duration-200"
+              >
+                read the write-up →
+              </Link>
             )}
             {project.links.demo && (
               <Link href={project.links.demo} className="micro hover:text-ink transition-colors duration-200">

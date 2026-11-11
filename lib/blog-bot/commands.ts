@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { githubAppConfig } from '@/lib/visitors/config';
+import { githubAppConfig } from '@/lib/github-config';
 import { discordConfig } from './config';
 import { dispatchDraft, listDraftPrs, mergeDraftPr, type DraftPr, type DraftRequest, type MergeResult } from './github';
 

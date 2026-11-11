@@ -3,8 +3,8 @@ import Footer from '@/components/Footer';
 import { projects } from '@/content/projects';
 
 export const metadata = {
-  title: "Resume | Steven Carreon",
-  description: "Professional resume and experience of Steven Carreon",
+  title: "Resume | Aurjei Steven Carreon",
+  description: "Professional resume and experience of Aurjei Steven Carreon",
 };
 
 const experience = [
@@ -128,7 +128,7 @@ export default function ResumePage() {
           <h2 className="section-label border-b border-gray-200 pb-3 mb-5">03 — relevant projects</h2>
           <div className="space-y-6">
             {projects
-              .filter((p) => p.status === 'shipped')
+              .filter((p) => p.status !== 'in-design')
               .map((p) => (
                 <div key={p.slug}>
                   <div className="flex justify-between items-baseline gap-4 mb-1">

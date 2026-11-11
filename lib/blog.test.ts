@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { formatPostDate, getAllPosts, parsePost, renderMarkdown } from './blog';
+import { projects } from '@/content/projects';
+import { formatPostDate, getAllPosts, parsePost, pickHomePosts, renderMarkdown } from './blog';
 
 const valid = `---
 title: How they cut NAT gateway costs
@@ -73,11 +74,49 @@ describe('renderMarkdown', () => {
 });
 
 describe('content/blog', () => {
+  it('every project write-up link points at a real post', () => {
+    const slugs = new Set(getAllPosts().map((p) => p.slug));
+    const missing = projects.filter((p) => p.links.post && !slugs.has(p.links.post)).map((p) => p.slug);
+    expect(missing).toEqual([]);
+  });
+
+  it('at most HOME_POSTS posts are featured, each at its own position', () => {
+    const featured = getAllPosts().flatMap((p) => (p.featured ? [p.featured] : []));
+    expect(new Set(featured).size).toBe(featured.length);
+    expect(featured.length).toBeLessThanOrEqual(5);
+  });
+
   it('every post file parses, newest first', () => {
     const posts = getAllPosts();
-    expect(posts.length).toBeGreaterThan(0);
     const times = posts.map((p) => p.date.getTime());
     expect(times).toEqual([...times].sort((a, b) => b - a));
+  });
+});
+
+describe('pickHomePosts', () => {
+  const post = (slug: string, date: string, featured?: number) =>
+    parsePost(slug, valid.replace('date: 2026-10-29', `date: ${date}`).replace('---\n\nIntro', featured ? `featured: ${featured}\n---\n\nIntro` : '---\n\nIntro'));
+  // getAllPosts order: newest first
+  const all = [
+    post('e', '2026-11-05'), post('d', '2026-11-04', 3), post('c', '2026-11-03', 1),
+    post('b', '2026-11-02'), post('a', '2026-11-01', 2),
+  ];
+
+  it('shows only featured posts, in their chosen order', () => {
+    expect(pickHomePosts(all).map((p) => p.slug)).toEqual(['c', 'a', 'd']);
+  });
+
+  it('caps the list', () => {
+    expect(pickHomePosts(all, 2).map((p) => p.slug)).toEqual(['c', 'a']);
+  });
+
+  it('falls back to the newest posts when nothing is featured', () => {
+    const plain = all.map((p) => ({ ...p, featured: undefined }));
+    expect(pickHomePosts(plain, 2).map((p) => p.slug)).toEqual(['e', 'd']);
+  });
+
+  it('rejects a non-numeric featured value', () => {
+    expect(() => parsePost('x', valid.replace('---\n\nIntro', 'featured: yes\n---\n\nIntro'))).toThrow(/featured/);
   });
 });
 
