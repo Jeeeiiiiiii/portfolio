@@ -10,7 +10,6 @@ const navItems = [
   { number: '03', name: 'blog', path: '/blog' },
   { number: '04', name: 'resume', path: '/resume' },
   { number: '05', name: 'contact', path: '/contact' },
-  { number: '06', name: 'visitors', path: '/visitors' },
 ];
 
 type ThemeMode = 'light' | 'dark' | 'system';
@@ -130,7 +129,7 @@ export default function SiteShell({ children }: { children: ReactNode }) {
       >
         <div>
           <Link href="/" className="block">
-            <span className="page-title !text-xl">steven carreon</span>
+            <span className="page-title !text-xl">aurjei steven carreon</span>
             <span className="micro block mt-2">cloud / devops engineer</span>
           </Link>
           <div className="mt-10 border-t border-gray-200 pt-6">
@@ -150,7 +149,7 @@ export default function SiteShell({ children }: { children: ReactNode }) {
       <header className="lg:hidden sticky top-0 z-40 border-b border-gray-200 bg-background/90 backdrop-blur">
         <div className="flex items-center justify-between px-4 py-3">
           <Link href="/" className="page-title !text-base">
-            steven carreon
+            aurjei steven carreon
           </Link>
           <button
             aria-label={menuOpen ? 'close menu' : 'open menu'}

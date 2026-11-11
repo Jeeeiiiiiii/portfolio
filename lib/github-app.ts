@@ -1,9 +1,9 @@
 import { App, type Octokit } from 'octokit';
-import { githubAppConfig } from '@/lib/visitors/config';
+import { githubAppConfig } from '@/lib/github-config';
 
 /**
- * One installation client for the GitHub App, shared by the visitor
- * playground and the blog bot. Each caller enforces its own path and branch
+ * One installation client for the GitHub App, used by the blog bot.
+ * Each caller enforces its own path and branch
  * rules; this module only authenticates.
  */
 

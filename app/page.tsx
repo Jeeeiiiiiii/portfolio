@@ -3,13 +3,10 @@ import Link from "next/link";
 import { SiAmazonwebservices, SiKubernetes, SiHelm, SiTerraform, SiDocker, SiArgo, SiGithubactions, SiJenkins, SiPrometheus, SiGrafana, SiIstio, SiPython, SiLinux, SiNextdotjs, SiTypescript } from 'react-icons/si';
 import { VscAzure } from 'react-icons/vsc';
 import Footer from '@/components/Footer';
-import { workContext, workHighlights } from '@/content/work';
-import { formatPostDate, getAllPosts } from '@/lib/blog';
-
-const LATEST_POSTS = 3;
+import { formatPostDate, getAllPosts, pickHomePosts } from '@/lib/blog';
 
 export const metadata = {
-  title: "Devops Engineer | Steven Carreon",
+  title: "Devops Engineer | Aurjei Steven Carreon",
   description: "Learn more about my background, skills, and experience in Devops Engineering",
 };
 
@@ -100,7 +97,7 @@ const experience = [
 
 export default function AboutPage() {
   const posts = getAllPosts();
-  const latest = posts.slice(0, LATEST_POSTS);
+  const homePosts = pickHomePosts(posts);
 
   return (
     <div className="min-h-screen">
@@ -114,7 +111,7 @@ export default function AboutPage() {
                 <span className="status-dot inline-block w-1.5 h-1.5 rounded-full bg-ink" />
                 <span className="micro">cavite, philippines</span>
               </div>
-              <h1 className="page-title mb-3">steven carreon</h1>
+              <h1 className="page-title mb-3">aurjei steven carreon</h1>
               <p className="micro !text-[11px] mb-4">cloud / devops engineer</p>
               <p className="text-gray-500 mb-6 max-w-md">
                 I run platforms — Kubernetes, GitOps, observability — and build small labs to
@@ -140,26 +137,26 @@ export default function AboutPage() {
             </div>
             <div className="relative w-32 h-32 sm:w-40 sm:h-40 shrink-0">
               <div className="relative w-full h-full rounded-full overflow-hidden grayscale">
-                <Image src="/profile.png" alt="Steven Carreon" fill className="object-cover" priority />
+                <Image src="/profile.png" alt="Aurjei Steven Carreon" fill className="object-cover" priority />
               </div>
               <div className="halftone-bottom absolute -bottom-3 inset-x-0 h-10 pointer-events-none" aria-hidden />
             </div>
           </div>
         </section>
 
-        {/* Writing — the newest posts, straight under the intro */}
-        {latest.length > 0 && (
-          <section className="mb-14">
-            <div className="flex items-baseline justify-between gap-4 mb-5">
-              <h2 className="section-label">01 — writing</h2>
-              {posts.length > LATEST_POSTS && (
-                <Link href="/blog" className="micro hover:text-ink transition-colors duration-200">
-                  all {posts.length} posts →
-                </Link>
-              )}
-            </div>
+        {/* Blog — the posts chosen with `featured` in their frontmatter (lib/blog.ts) */}
+        <section className="mb-14">
+          <div className="flex items-baseline justify-between gap-4 mb-5">
+            <h2 className="section-label">01 — blog</h2>
+            {posts.length > homePosts.length && (
+              <Link href="/blog" className="micro hover:text-ink transition-colors duration-200">
+                show all {posts.length} posts →
+              </Link>
+            )}
+          </div>
+          {homePosts.length > 0 ? (
             <div className="divide-y divide-gray-200 border-y border-gray-200">
-              {latest.map((post) => (
+              {homePosts.map((post) => (
                 <Link key={post.slug} href={`/blog/${post.slug}`} className="group block py-5">
                   <div className="flex justify-between items-baseline gap-4 mb-1">
                     <h3 className="font-semibold tracking-tight group-hover:underline underline-offset-2 decoration-gray-300">
@@ -171,8 +168,12 @@ export default function AboutPage() {
                 </Link>
               ))}
             </div>
-          </section>
-        )}
+          ) : (
+            <p className="text-[13px] text-gray-500 border-y border-gray-200 py-5">
+              New posts on the MLOps and DevOps labs are on the way.
+            </p>
+          )}
+        </section>
 
         {/* Stack */}
         <section className="mb-14">
@@ -190,31 +191,9 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* At work now */}
-        <section className="mb-14">
-          <h2 className="section-label mb-5">03 — at work now</h2>
-          <p className="text-[13px] text-gray-500 leading-relaxed mb-6 max-w-lg">{workContext}</p>
-          <div className="divide-y divide-gray-200 border-y border-gray-200">
-            {workHighlights.map((item) => (
-              <article key={item.title} className="py-6">
-                <h3 className="font-semibold tracking-tight mb-1">{item.title}</h3>
-                <p className="micro mb-3">{item.label}</p>
-                <p className="text-[13px] text-gray-500 leading-relaxed mb-3">{item.body}</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {item.stack.map((tech) => (
-                    <span key={tech} className="rounded-full border border-gray-300 px-2 py-px micro !text-[9px]">
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-
         {/* Experience */}
         <section className="mb-14">
-          <h2 className="section-label mb-5">04 — experience</h2>
+          <h2 className="section-label mb-5">03 — experience</h2>
           <div className="divide-y divide-gray-200 border-y border-gray-200">
             {experience.map((job) => (
               <div key={job.title} className="py-6">
@@ -235,7 +214,7 @@ export default function AboutPage() {
 
         {/* GitHub */}
         <section className="mb-14">
-          <h2 className="section-label mb-5">05 — github</h2>
+          <h2 className="section-label mb-5">04 — github</h2>
           <div className="border border-gray-200 rounded-2xl p-5 bg-gray-50 shadow-[var(--shadow-card)]">
             <Image
               src="http://ghchart.rshah.org/Jeeeiiiiiii"
@@ -250,7 +229,7 @@ export default function AboutPage() {
 
         {/* Certifications */}
         <section>
-          <h2 className="section-label mb-5">06 — certifications</h2>
+          <h2 className="section-label mb-5">05 — certifications</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {certifications.map((cert) => (
               <a

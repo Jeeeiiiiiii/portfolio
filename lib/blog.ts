@@ -28,7 +28,15 @@ export const postFrontmatterSchema = z.object({
   source: z.string().url().optional(),
   /** drafts build in dev only */
   draft: z.boolean().optional().default(false),
+  /**
+   * Show this post on the home page. The number is its position (1 = top);
+   * only the first HOME_POSTS featured posts appear there.
+   */
+  featured: z.number().int().min(1).max(99).optional(),
 });
+
+/** How many posts the home page lists before "show all". */
+export const HOME_POSTS = 5;
 
 export type PostFrontmatter = z.infer<typeof postFrontmatterSchema>;
 
@@ -135,6 +143,17 @@ export function getAllPosts(): Post[] {
     .map((f) => parsePost(f.slice(0, -3), fs.readFileSync(path.join(BLOG_DIR, f), 'utf8')))
     .filter((p) => includeDrafts() || !p.draft)
     .sort((a, b) => b.date.getTime() - a.date.getTime());
+}
+
+/**
+ * The posts the home page shows: those marked `featured`, in their chosen
+ * order, capped at `limit`. With nothing featured yet, the newest posts.
+ */
+export function pickHomePosts(posts: Post[], limit: number = HOME_POSTS): Post[] {
+  const featured = posts
+    .filter((p) => p.featured !== undefined)
+    .sort((a, b) => a.featured! - b.featured! || b.date.getTime() - a.date.getTime());
+  return (featured.length > 0 ? featured : posts).slice(0, limit);
 }
 
 export function getPost(slug: string): Post | undefined {

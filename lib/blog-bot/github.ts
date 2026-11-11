@@ -1,5 +1,5 @@
 import { installationClient } from '@/lib/github-app';
-import { REPO } from '@/lib/visitors/config';
+import { REPO } from '@/lib/github-config';
 import { BLOG_BRANCH_PREFIX, BLOG_DISPATCH_EVENT } from './config';
 
 /**

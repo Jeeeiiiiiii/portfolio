@@ -6,17 +6,14 @@ Personal site — [stevencarreon on Vercel](https://final-portfolio.vercel.app).
 ## What is where
 
 ```
-app/                 routes: / (about), /projects, /projects/[slug], /blog, /resume, /contact, /visitors
-app/api/visitors/    submit (POST) and status (GET) — the visitor playground write path
+app/                 routes: / (about), /projects, /projects/[slug], /blog, /resume, /contact
 app/api/discord/     the /blog Discord command (docs/blog-bot.md)
 content/blog/        one markdown file per post; lib/blog.ts reads them
 content/projects.ts  every project, one typed module; the grid, detail pages and resume read it
-content/work.ts      the "at work now" highlights on the about page
-content/visitors.json  the guestbook — edited only through pull requests
 lib/blog-bot/        Discord signature check · /blog commands · GitHub dispatch/merge
-lib/visitors/        config · github (App + PR) · turnstile · ratelimit · moderate · submit · pipeline
+lib/github-config.ts GitHub App environment (used by the blog bot)
 public/diagrams/     archify architecture pages from the lab repos, embedded on project pages
-docs/playground-plan.md  the visitor playground: goals, architecture, security checklist, progress log
+docs/blog-style.md   how posts are written: structure, voice, checklist
 docs/blog-bot.md     drafting posts from Discord: flow, guard rails, setup
 ```
 
@@ -30,8 +27,8 @@ npm run typecheck
 npm run build      # lint + typecheck + build, same as CI
 ```
 
-Copy `.env.example` to `.env.local` for the optional integrations (visitor submissions, the contact map).
-Without them the site builds and runs; the visitor form shows a "submissions open soon" state.
+Copy `.env.example` to `.env.local` for the optional integrations (the blog bot, the contact map).
+Without them the site builds and runs.
 
 ## Editing content
 
@@ -40,23 +37,23 @@ Without them the site builds and runs; the visitor form shows a "submissions ope
   diagram, drop the HTML in `public/diagrams/` and set `links.diagram`.
 - **A blog post** — add `content/blog/<slug>.md` (lowercase-hyphenated filename = URL). Frontmatter:
   `title`, `date` (YYYY-MM-DD), `excerpt`, `tags`, and optionally `image` (path under `public/`),
-  `source` (the article it responds to) and `draft: true` (dev only). `lib/blog.ts` validates the
+  `source` (the article it responds to), `draft: true` (dev only) and `featured: <n>`. `lib/blog.ts` validates the
   frontmatter, renders the markdown, sanitises the HTML and builds the table of contents from `##` headings.
   Or from your phone: `/blog write` (your own thoughts) or `/blog new url:<article>` in Discord drafts it as a PR (docs/blog-bot.md).
-  The three newest posts also appear on the home page.
-- **Work highlights** — `content/work.ts`. Written for a public site: no client names, tickets or hostnames.
-- **Visitor cards** — never by hand; they arrive as PRs labelled `visitor-submission`.
+  The home page lists up to five posts marked `featured`, in order (`featured: 1` is the top); with none
+  featured it shows the five newest. Everything else is under "show all" (`/blog`).
+  Write posts the way `docs/blog-style.md` describes.
+- **Public-content rule** — no client names, tickets or hostnames from the day job anywhere on the site.
 
 ## Branches and environments
 
 | Branch      | Vercel     | Purpose                              |
 |-------------|------------|--------------------------------------|
-| `main`      | production | read-only demo surface               |
-| `staging`   | preview    | the sandbox where the form is live   |
-| `visitor/*` | preview    | one branch per submitted card        |
+| `main`      | production | the live site                        |
+| `staging`   | preview    | check changes before production      |
+| `blog/*`    | preview    | one branch per drafted post          |
 
 CI (`.github/workflows/ci.yml`) runs lint, typecheck, unit tests and build on every PR and push to
-`main`/`staging`. `visitor-pr-guard.yml` fails any `visitor/*` PR that touches a file other than
-`content/visitors.json`; `stale-visitor-prs.yml` closes idle visitor PRs after 7 days.
+`main`/`staging`.
 `blog-draft.yml` drafts a post as a PR (from Discord or by hand); `blog-pr-guard.yml` fails any `blog/*`
 PR that touches anything but `content/blog/*.md`.

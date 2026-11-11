@@ -5,7 +5,11 @@
  */
 
 export type ProjectStatus = 'shipped' | 'in-progress' | 'in-design';
-export type ProjectKind = 'lab' | 'platform' | 'architecture';
+/**
+ * project = the main work, listed first. lab = a small system that makes one
+ * part of a platform visible. earlier = work from before the labs.
+ */
+export type ProjectKind = 'project' | 'lab' | 'earlier';
 
 export interface ProjectDecision {
   title: string;
@@ -32,6 +36,8 @@ export interface Project {
     demo?: string;
     /** the repo this was modelled on, if any */
     inspiredBy?: { label: string; url: string };
+    /** slug of the blog post that tells this project's story */
+    post?: string;
   };
   /** what it is for — the reason the project exists, in plain words */
   purpose: string[];
@@ -48,7 +54,295 @@ export interface Project {
 }
 
 export const projects: Project[] = [
+  // ======================= main projects ============================ //
+  {
+    slug: 'payments-platform',
+    title: 'Payments Platform',
+    tagline: 'what happens to the money when a provider fails',
+    status: 'in-progress',
+    kind: 'project',
+    period: 'nov 2026 —',
+    summary:
+      'Infrastructure around Hyperswitch, an open-source payment app: a mock provider that fails on demand, a job that finds double charges, alerts on a provider SLO, signed images enforced at admission, and Argo CD delivery on Kubernetes.',
+    stack: ['Hyperswitch', 'Kubernetes', 'kind', 'Argo CD', 'Kyverno', 'cosign', 'Trivy', 'Prometheus', 'Alertmanager', 'Kafka', 'Python', 'Docker Compose'],
+    links: { post: 'payments-retries-double-charge' },
+    purpose: [
+      'When a payment provider fails, the payment app retries on a backup provider so the customer can still pay. That keeps sales flowing, but a provider that took the money and then returned an error leads to a second charge. This project measures exactly when that happens and builds what an operations team needs to catch it.',
+      'The payment app itself is Hyperswitch, used as is. This is the platform and the failure testing around it, with test cards and simulated providers only. No real money moves.',
+    ],
+    ascii: `   customer ─▶ Hyperswitch router ─▶ mock provider A  (fails on demand: 500, hang, reset,
+                    │      │             mock provider B   "charge, then fail")
+                    │      └─ retry rules = the failover policy
+                    ▼
+                 Postgres ◀── reconciler (read-only, every 15 s)
+                                 │  compares provider charges with stored payments
+                                 ▼
+                 Prometheus ─▶ Alertmanager ─▶ Slack
+                 (provider SLO, double charge, stuck payment, release blocked)
+
+   kind cluster:  Argo CD ◀── Git    Kyverno: only signed images with an SBOM start`,
+    decisions: [
+      {
+        title: 'Retry rules are the failover policy',
+        why: 'Each retry rule is a decision about how much double-charge risk to accept for that error. Retry on 500 and 503, with reconciliation behind it. Never retry on a timeout: a hang is the failure most likely to hide a charge.',
+      },
+      {
+        title: 'The reconciler only reports',
+        why: 'It compares each provider\'s settlement report with the stored payments and raises findings. Moving money back is a decision for a person. If any data fails to load it exits with an error, because a report built from partial data looks clean.',
+      },
+      {
+        title: 'Alert on what the customer feels, not on the error counter',
+        why: 'The error counter fires on ordinary card declines and stays silent through a total connection-reset outage. Calls minus 2xx minus 4xx was right in all five measured cases, so the provider SLO uses that.',
+      },
+      {
+        title: 'Only signed images run',
+        why: 'Images are scanned, get an SBOM, and are signed. Kyverno refuses anything unsigned, without an SBOM, from another registry, or referenced by tag. A bad release in Git fails at admission and the old version keeps running.',
+      },
+    ],
+    practices: [
+      'Repeatable failure scenarios: every finding has a script that recreates it.',
+      'Known-answer tests: the reconciler passed 13 of 13 checks with each failure caused on purpose, including no false alarms.',
+      'GitOps with drift repair: a manual scale and a deleted policy were reverted by Argo CD within seconds.',
+      'Default-deny network policy, non-root pods with read-only filesystems, restricted Pod Security.',
+      'Tools pinned by digest after the March 2026 Trivy compromise.',
+    ],
+    honest: [
+      'Measured: a double charge alerted in 31 seconds and a connection-reset outage in 96 seconds, with a 15-second reconciliation interval.',
+      'Not real: the providers are a mock, so the results show how the router behaves when a failure happens, not how often real providers fail this way.',
+      'Not tested yet: a real Slack workspace, provider-side idempotency keys (the mock protocol cannot send one), and running on AWS.',
+    ],
+    next: [
+      'Fraud scoring on the Kafka payment events, first in shadow mode, then as a canary.',
+      'A second alert channel, so a broken Slack integration is not silent.',
+      'Move to AWS with the same manifests.',
+    ],
+  },
+
   // ------------------------------------------------------------------ //
+  {
+    slug: 'crypto-trading-platform',
+    title: 'Crypto Trading Platform',
+    tagline: 'stopping a trading bot that cannot see the market',
+    status: 'in-progress',
+    kind: 'project',
+    period: 'nov 2026 —',
+    summary:
+      'Infrastructure around Hummingbot, an open-source trading bot, paper trading against a mock exchange: a guard that halts bots on frozen market data, a halt that survives restarts, alerts to Slack, and two bots on Kubernetes deployed by Flux.',
+    stack: ['Hummingbot', 'Kubernetes', 'kind', 'Flux', 'SOPS', 'age', 'Mosquitto', 'Prometheus', 'Alertmanager', 'Python', 'Docker Compose'],
+    links: { post: 'crypto-bot-frozen-prices' },
+    purpose: [
+      'A trading bot is only as good as the prices it sees. When the market data feed froze while the price fell 3%, the bot kept quoting around the old price, every quote on the wrong side of the market, and logged nothing. This project builds the safety layer a platform team would put around such a bot.',
+      'The bot is Hummingbot, used as is. It paper trades against a mock exchange: no exchange accounts, no API keys, no real orders.',
+    ],
+    ascii: `   bot (Hummingbot, paper trading)  ── no route to the internet
+     │  resolves Binance hostnames to the mock, trusts only the lab CA
+     ▼
+   mock exchange ── prices and faults on demand (freeze, drop, 429, hang)
+   bot ── MQTT ──▶ Mosquitto (login + per-bot topic rules) ◀── guard
+   guard ── its own feed + best bid/ask ── halts a bot on:
+              5 s of silence, or an order more than 5 bps through the market
+   Prometheus ─▶ Alertmanager ─▶ Slack
+
+   kind: two bots, Flux from Git, secrets SOPS-encrypted, halt = ConfigMap key`,
+    decisions: [
+      {
+        title: 'Watch from outside the bot',
+        why: 'The bot could not tell its feed was frozen, so it cannot be trusted to stop itself. The guard keeps its own feed and its own view of the best price, and halts the bot from outside.',
+      },
+      {
+        title: 'A halt has to stick',
+        why: 'A restarted bot resumes trading on its own. The guard writes a halt the bot can read but not change, and the bot refuses to start while it exists. Only a person can resume, and only with a note that is kept.',
+      },
+      {
+        title: 'Two independent checks',
+        why: 'Silence on the guard\'s own feed catches an exchange-side freeze. An order priced through the real market catches a bot whose own view is wrong while the exchange is fine.',
+      },
+      {
+        title: 'Each bot only sees its own topics',
+        why: 'The broker needs a login, a bot cannot read or clear its own halt notice, and the guard can send stop but not start.',
+      },
+    ],
+    practices: [
+      'Fault injection through a mock exchange that speaks Binance\'s market data API, so the bot runs unmodified.',
+      'GitOps with Flux and SOPS-encrypted secrets; the Slack webhook never enters Git, even encrypted.',
+      'NetworkPolicy: a bot pod can reach only the exchange and the broker.',
+      'Alert rules with unit tests, and end-to-end checks against a stand-in Slack webhook.',
+    ],
+    honest: [
+      'Measured: the guard halted a frozen bot after 5.1 s, the stop was acknowledged in 0.07 s, and no quote crossed the market, against 5 of 5 without the guard. On kind, 20 of 20 checks passed.',
+      'Known gaps: on Kubernetes a halt takes 48 to 59 seconds to reach a running pod, the crossed-quote check acts after the first bad order, and docker stop kills the bot without cancelling its orders.',
+      'The mock exchange serves market data only; orders and balances are not implemented.',
+    ],
+    next: [
+      'Close the gaps: delete a halted bot\'s pod, cancel orders before stopping, and watch the guard itself.',
+      'An anomaly model on recorded market data that feeds the same halt path.',
+    ],
+  },
+
+  // ------------------------------------------------------------------ //
+  {
+    slug: 'fraud-detection',
+    title: 'Fraud Detection',
+    tagline: 'a fraud model that scores what it was trained on',
+    status: 'in-progress',
+    kind: 'project',
+    period: 'jun 2026 —',
+    summary:
+      'Real-time fraud scoring: features computed without peeking at the future, an XGBoost model tracked in MLflow, a scoring API that returns allow, review or block, and drift and feedback jobs that say when the model is going wrong.',
+    stack: ['Python', 'XGBoost', 'Optuna', 'MLflow', 'Feast', 'Redis', 'FastAPI', 'Prometheus', 'Grafana', 'Docker Compose', 'KServe', 'Argo Workflows'],
+    links: { post: 'fraud-model-training-serving-skew' },
+    purpose: [
+      'A fraud model sits in the payment path: every card payment waits for its answer. It must be fast, it must see the same inputs it was trained on, and someone must notice when it starts getting things wrong.',
+      'The project started from a working repo and turned into a list of silent bugs. The worst one: the scoring service encoded "visa" as 7412 while training had encoded it as 2, so the live model was reading nonsense and still answering 200 OK.',
+    ],
+    ascii: `   offline (scheduled)                         online (per payment)
+   transactions ─▶ Stage 0 features ─▶ Redis    payment ─▶ enrichment ─▶ scoring API
+                   (past data only)       │                    ▲   │          │
+                         │                └──── history ───────┘   │   allow / review / block
+                         ▼                                         ▼
+                    train (XGBoost + Optuna) ─▶ MLflow ─── model + encoders
+                                                                  │
+   drift job (PSI per feature) ─▶ Prometheus ◀── feedback store (prediction ⨝ real outcome)`,
+    decisions: [
+      {
+        title: 'Serving loads the encoders training saved',
+        why: 'The model and the way categories were turned into numbers travel together in MLflow. A test asserts serving encodes every category exactly as training did.',
+      },
+      {
+        title: 'History features use only the past',
+        why: 'A merchant\'s fraud rate must not include the transaction being scored, or the model sees the answer while training and fails in production. A test builds a case where leakage would show and checks it does not.',
+      },
+      {
+        title: 'Split by time, not at random',
+        why: 'In the IEEE-CIS data, later transactions of a charged-back account are also labelled fraud. A random split leaks the future into training and makes the model look better than it is.',
+      },
+      {
+        title: 'Only fields known when the card is swiped',
+        why: 'The dataset has about 400 engineered columns that a live payment service could not produce. They are dropped, so the model is trained on what it will actually receive.',
+      },
+    ],
+    practices: [
+      'Regression tests for training-serving skew: encoding, feature layout, and point-in-time correctness.',
+      'A feedback store that joins each prediction with the real outcome, so the false positive rate can be computed instead of claimed.',
+      'A drift job that computes PSI per feature and pushes it to Prometheus.',
+      'Experiment tracking and model registration in MLflow.',
+    ],
+    honest: [
+      'No real accuracy numbers yet: the switch to the IEEE-CIS dataset (590k real e-commerce transactions) is coded and tested on a sample, and the first real training run is next.',
+      'Latency on a laptop: p99 was 64 to 84 ms against a 50 ms target, while the average is 7 ms. Not good enough yet.',
+      'The Kubernetes half (Argo training workflow, KServe canary, shadow traffic) is written but has never run.',
+    ],
+    next: [
+      'First real training run on IEEE-CIS, with the numbers published.',
+      'Run training and serving on kind, then score the payments platform\'s Kafka events in shadow mode.',
+      'Pick the decision threshold by cost: missed fraud against a blocked good customer.',
+    ],
+  },
+
+  // ------------------------------------------------------------------ //
+  {
+    slug: 'model-signoff',
+    title: 'Model Sign-off',
+    tagline: 'a new model goes live only when it beats the old one and a reviewer agrees',
+    status: 'in-design',
+    kind: 'project',
+    period: 'planned, nov 2026',
+    summary:
+      'A release process for models at a regulated company: every new model is tested against the one in production on the same data, promoted only through a pull request a risk reviewer approves, and leaves an evidence pack an auditor can read months later.',
+    stack: ['MLflow', 'Argo Workflows', 'Argo CD', 'Evidently', 'copier', 'GitHub Actions', 'kind', 'SageMaker', 'Terraform'],
+    links: { post: 'model-signoff-design' },
+    purpose: [
+      'At a bank, a model cannot go live because its author says it is better. Someone has to prove it beats the current model on the same test, someone from risk has to sign it off, and an auditor must be able to see who approved what. Without a platform this is spreadsheets, screenshots and email.',
+      'Two models go through it, as if from two teams: a credit default model on a public dataset and the fraud model from the Fraud Detection project.',
+    ],
+    ascii: `   new model ─▶ evaluation gate ──────────────────────────▶ report
+                 same frozen test set as @champion
+                 must win on the agreed metric AND pass stability checks
+                      │ pass
+                      ▼
+                 @challenger ─▶ pull request: move @champion ─▶ risk reviewer approves
+                                                              │
+                                     Argo CD applies ◀────────┘
+                                     evidence pack: model card, data hash,
+                                     report, approver, date`,
+    decisions: [
+      {
+        title: 'Promotion is a pull request',
+        why: 'Moving the @champion alias is a one-line change in Git, and a CODEOWNERS rule makes a risk reviewer\'s approval mandatory. The audit trail is the Git history.',
+      },
+      {
+        title: 'Aliases, not stages',
+        why: 'MLflow\'s Staging and Production stages are deprecated. Aliases like @champion and @challenger are the current way.',
+      },
+      {
+        title: 'Compare self-hosted with managed',
+        why: 'The same model runs once on MLflow on kind and once on SageMaker, and a decision record compares setup time, cost, security fit and effort.',
+      },
+    ],
+    practices: [
+      'A project template, so a new model repo starts with tests, CI and tracking already wired.',
+      'A pipeline generated from one config file per model.',
+      'An evaluation report per candidate model, kept with the model version.',
+    ],
+    honest: ['Not built yet. This page is the plan; it will show measured results once they exist.'],
+    next: [
+      'Build the gate and the promotion pull request first, with the credit model.',
+      'Onboard the fraud model and measure how many steps it takes.',
+    ],
+  },
+
+  // ------------------------------------------------------------------ //
+  {
+    slug: 'model-hosting',
+    title: 'Model Hosting Platform',
+    tagline: 'one pull request from a trained model to a live endpoint',
+    status: 'in-design',
+    kind: 'project',
+    period: 'planned, nov 2026',
+    summary:
+      'One supported way to put a model online: a team adds one file, and the platform builds the endpoint, rolls it out gradually, rolls it back on its own when it gets slow, scales it to zero when idle, and shows the cost per team. Includes a gateway for LLM calls with a budget per team.',
+    stack: ['KServe', 'Knative', 'Gateway API', 'Argo CD', 'Helm', 'Terraform', 'EKS', 'OpenCost', 'LiteLLM', 'k6'],
+    links: { post: 'model-hosting-design' },
+    purpose: [
+      'Data scientists can train a model in a day and then wait weeks for a container, a namespace, a load balancer, monitoring and an approval. Each team does it slightly differently, so every outage is new. A shared, supported path means the platform team solves the hard parts once.',
+      'The credit and fraud models from the Model Sign-off project are served through it, as two teams sharing one chart.',
+    ],
+    ascii: `   team adds serving/<model>.yaml ─▶ CI checks it ─▶ Helm renders a KServe endpoint
+                                                          │
+                                         Argo CD deploys ◀┘
+                                         canary 10% ─▶ latency or errors bad? ─▶ roll back
+                                         idle ─▶ scale to zero
+                                         cost per team (OpenCost)
+
+   apps ─▶ LLM gateway ─▶ Claude API | small local model
+           per-team keys, token budgets, fallback, usage metrics`,
+    decisions: [
+      {
+        title: 'KServe, not Seldon Core',
+        why: 'Seldon Core moved to a source-available licence in January 2024, so production use needs a paid licence. KServe is open source and a CNCF project.',
+      },
+      {
+        title: 'Gateway API, not ingress-nginx',
+        why: 'ingress-nginx was retired in March 2026 and gets no more fixes, including security fixes.',
+      },
+      {
+        title: 'Shared Terraform modules',
+        why: 'A cluster module, a model-namespace module (its own IAM role, bucket and quotas) and an observability module. Two teams consume the same modules; tested locally, applied once on real EKS with the cost published.',
+      },
+    ],
+    practices: [
+      'Canary releases with automatic rollback on a latency or error target.',
+      'Scale-to-zero for idle models, with the cold start measured.',
+      'Per-team cost and per-team LLM token budgets.',
+    ],
+    honest: ['Not built yet. This page is the plan; it will show measured results once they exist.'],
+    next: [
+      'The one-file-to-endpoint path with the credit model first.',
+      'Measure: time from merge to live, cold start, p95 latency under load, cost per team per day.',
+    ],
+  },
+
+  // ============================ labs ================================ //
   {
     slug: 'pipeline-lab',
     title: 'Pipeline Lab',
@@ -482,76 +776,6 @@ export const projects: Project[] = [
   },
 
   // ------------------------------------------------------------------ //
-  {
-    slug: 'visitor-playground',
-    title: 'Visitor Playground',
-    tagline: 'this site\'s gitops guestbook',
-    status: 'in-progress',
-    kind: 'platform',
-    period: 'may 2026 — present',
-    summary:
-      'A guestbook where every card arrives as a pull request. A visitor fills a form on the staging site, a GitHub App opens a PR against main, CI checks it, a preview deploys, and merging it publishes the card — content as code, reviewed like code.',
-    stack: ['Next.js', 'TypeScript', 'zod', 'GitHub App', 'Octokit', 'GitHub Actions', 'Vercel', 'Cloudflare Turnstile', 'Upstash Redis'],
-    links: {
-      github: 'https://github.com/Jeeeiiiiiii/portfolio',
-      demo: '/visitors',
-    },
-    purpose: [
-      'A portfolio should demonstrate the workflow it claims, not just list it. This feature lets a visitor trigger a real GitOps flow — branch, commit, pull request, CI, preview environment, review, merge, deploy — and watch each step light up.',
-      'The write path is deliberately narrow: the only file a visitor PR may touch is content/visitors.json, enforced in code and again by a CI check on the PR.',
-    ],
-    ascii: `   visitor on staging /visitors
-        │  form + Turnstile token
-        ▼
-   POST /api/visitors/submit
-     validate (zod) ─▶ verify captcha ─▶ rate limit ─▶ moderate ─▶ GitHub App
-                                                                      │
-                                                    branch visitor/<id>
-                                                    commit content/visitors.json
-                                                    open PR → main  (label: visitor-submission)
-                                                                      │
-        ┌────────────── GET /api/visitors/status?pr=N ◀──────────────┘
-        │   checks (CI + path guard) · preview URL (Vercel) · merged?
-        ▼
-   the page shows the PR moving: opened → checks → preview → review → merged → live`,
-    decisions: [
-      {
-        title: 'Content is a JSON file in git, not a database',
-        why: 'The point is the review. A row in a database has no diff, no CI, no preview, no approval. A JSON file has all four for free.',
-      },
-      {
-        title: 'A GitHub App, not a personal token',
-        why: 'Installed on one repository with write access to contents and pull requests, and read access to checks, deployments and statuses so the page can show the PR moving. The private key lives in a Vercel environment variable; the app can only write one path, enforced in lib/visitors/github.ts and verified by the visitor-pr-guard workflow.',
-      },
-      {
-        title: 'Submissions only off production',
-        why: 'The form renders on staging and preview deploys; production shows the same page read-only. Production is the demo surface where merged cards appear, staging is the sandbox.',
-      },
-      {
-        title: 'Auto-PR every submission, no moderation queue',
-        why: 'Spam control happens at submit time: Turnstile, rate limit (1/min, 5/day per IP), a profanity filter, and a link allowlist. Review happens on GitHub, where the owner already lives. Stale visitor PRs close themselves after 7 days.',
-      },
-      {
-        title: 'One deep module behind a thin route',
-        why: 'submitVisitorCard() does validate → captcha → rate-limit → moderate → PR and returns a result union. The route handler only maps that to HTTP. Every step can be tested through that one function with fake adapters.',
-      },
-    ],
-    practices: [
-      'Branch protection on main: CI and the path-guard check must pass, one approving review, no force pushes.',
-      'CI on every PR: lint, typecheck, build. A visitor PR that touches anything but content/visitors.json fails the guard.',
-      'The same zod schema validates the client form, the API request, and the JSON file at build time.',
-      'Secrets never logged; the captcha token and rate-limit identity never leave the server.',
-    ],
-    honest: [
-      'Read path, schema, CI and guards have been in place since May 2026; the write path (GitHub App, captcha, rate limit, PR status) is wired in code and turns on once the external setup — App credentials, Turnstile keys, Upstash — is added as environment variables.',
-      'Until then the form shows a "submissions open soon" state and the pipeline diagram on the page explains the flow.',
-    ],
-    next: [
-      'Finish the external setup and run the first end-to-end submission on staging.',
-      'Discord webhook on PR opened / merged so review does not depend on checking GitHub.',
-      'Reuse the same pipeline for model-card submissions as an MLOps showcase.',
-    ],
-  },
 
   // ------------------------------------------------------------------ //
   {
@@ -559,7 +783,7 @@ export const projects: Project[] = [
     title: 'Patient Monitoring System',
     tagline: 'two-tier aws with terraform, qr-coded records',
     status: 'shipped',
-    kind: 'platform',
+    kind: 'earlier',
     period: '2024 — 2025',
     summary:
       'A patient monitoring system where a QR code on the wristband opens the patient\'s record, deployed on a two-tier AWS architecture provisioned with Terraform: application tier in public subnets, database tier in private ones.',
@@ -602,7 +826,7 @@ export const statusLabel: Record<ProjectStatus, string> = {
 };
 
 export const kindLabel: Record<ProjectKind, string> = {
+  project: 'project',
   lab: 'lab',
-  platform: 'platform',
-  architecture: 'architecture',
+  earlier: 'earlier work',
 };

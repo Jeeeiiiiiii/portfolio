@@ -3,8 +3,8 @@ import Footer from '@/components/Footer';
 import { projects, statusLabel, kindLabel, type Project } from '@/content/projects';
 
 export const metadata = {
-  title: "Projects | Steven Carreon",
-  description: "Infrastructure labs, platform work, and architecture — each one a small system whose only job is to make one part of a platform visible.",
+  title: "Projects | Aurjei Steven Carreon",
+  description: "Payments, trading-bot and machine-learning platforms, each tested by breaking it on purpose, plus smaller infrastructure labs.",
 };
 
 function ProjectTile({ project }: { project: Project }) {
@@ -43,9 +43,27 @@ function ProjectTile({ project }: { project: Project }) {
   );
 }
 
+function Section({ label, note, items }: { label: string; note: string; items: Project[] }) {
+  if (items.length === 0) return null;
+  return (
+    <section className="mb-12">
+      <div className="flex items-baseline justify-between border-b border-gray-200 pb-4 mb-6">
+        <h2 className="section-label">{label}</h2>
+        <span className="micro">{note}</span>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {items.map((p) => (
+          <ProjectTile key={p.slug} project={p} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function ProjectsPage() {
+  const main = projects.filter((p) => p.kind === 'project');
   const labs = projects.filter((p) => p.kind === 'lab');
-  const rest = projects.filter((p) => p.kind !== 'lab');
+  const earlier = projects.filter((p) => p.kind === 'earlier');
 
   return (
     <div className="min-h-screen">
@@ -55,35 +73,15 @@ export default function ProjectsPage() {
           <h1 className="page-title mb-3">projects</h1>
           <p className="micro">02 — selected work</p>
           <p className="text-gray-500 mt-4 max-w-md text-[13px] leading-relaxed">
-            Each lab is a small application whose only job is to make one part of a platform
-            visible. All of them run on one machine against a local AWS emulator, so the Terraform
-            is written for a real account and costs nothing to run.
+            The projects are platforms around real open-source apps and models: payments, trading
+            bots and machine learning, each tested by breaking it on purpose. The labs are smaller
+            systems, each one making a single part of a platform visible.
           </p>
         </header>
 
-        <section className="mb-12">
-          <div className="flex items-baseline justify-between border-b border-gray-200 pb-4 mb-6">
-            <h2 className="section-label">01 — infrastructure labs</h2>
-            <span className="micro">{labs.length} labs · verified end to end on a local emulator</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {labs.map((p) => (
-              <ProjectTile key={p.slug} project={p} />
-            ))}
-          </div>
-        </section>
-
-        <section>
-          <div className="flex items-baseline justify-between border-b border-gray-200 pb-4 mb-6">
-            <h2 className="section-label">02 — platform &amp; architecture</h2>
-            <span className="micro">{rest.length} projects</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {rest.map((p) => (
-              <ProjectTile key={p.slug} project={p} />
-            ))}
-          </div>
-        </section>
+        <Section label="01 — projects" note={`${main.length} projects`} items={main} />
+        <Section label="02 — labs" note={`${labs.length} labs · verified end to end on a local emulator`} items={labs} />
+        <Section label="03 — earlier work" note={`${earlier.length} project${earlier.length === 1 ? '' : 's'}`} items={earlier} />
       </div>
       <Footer />
     </div>
