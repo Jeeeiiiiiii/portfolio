@@ -3,11 +3,12 @@ title: "Running LLMs on Kubernetes with KServe: what changes from normal model s
 date: 2026-11-11
 excerpt: Serving a large language model isn't like serving a fraud model. These are my study notes on why - GPU memory, the KV cache, two phases per request - and how KServe's LLMInferenceService, vLLM and llm-d handle it on Kubernetes.
 tags: [Kubernetes, LLMOps, KServe, vLLM]
+source: https://developers.redhat.com/articles/2026/04/21/kserve-llm-d-optimized-gen-ai-inference
 ---
 
 *What you'll get: why LLM serving needs different infrastructure, what each piece in the current open-source stack does, and how I'd start.*
 
-As with my [GPU notes](/blog/gpus-on-kubernetes), I haven't run this on GPUs yet. These are notes from the KServe, llm-d and Kubernetes documentation, organised the way I'd explain it to a teammate. Versions are as of November 2026.
+As with my [GPU notes](/blog/gpus-on-kubernetes), I haven't run this on GPUs yet. These are notes from the KServe, llm-d and Kubernetes documentation and from Red Hat's write-up on KServe with llm-d (credited at the end), organised the way I'd explain it to a teammate. Versions are as of November 2026.
 
 ## The problem, in plain words
 
@@ -57,6 +58,27 @@ client ─▶ Gateway (Gateway API)
 2. **The endpoint picker scores every model server.** Does it already hold this prompt's prefix in its KV cache? How long is its queue?
 3. **The best-scoring vLLM pod runs the request:** prefill on the prompt, then decode, streaming tokens back.
 4. **At larger scale, prefill and decode can run on separate pods,** each scaled for its own job, with the KV cache passed between them over a fast network.
+
+## Why the symptoms look healthy
+
+Red Hat's April 2026 write-up on KServe and llm-d describes what a first LLM deployment on Kubernetes typically looks like. Everything is green, and yet:
+
+- **Tail latency is unpredictable.** Most users get a fast first word; some wait far longer, with no obvious cause.
+- **GPUs look busy but aren't productive.** Utilisation is high, throughput isn't.
+- **Cached work isn't reused.** Requests sharing the same long system prompt land on different pods, so each pod recomputes it.
+
+The cause is that the round-robin load balancer, prefill and decode, and autoscaling all treat LLM requests like web requests. Their framing of the fix is a split into layers, each with one job:
+
+| Layer | Its one job |
+|---|---|
+| Kubernetes | Run the pods and hand out GPUs |
+| KServe | The model's lifecycle: deploy, version, canary, scale, expose an OpenAI-compatible API |
+| vLLM | Run the model efficiently *inside* one pod: batching, KV cache management |
+| llm-d | Decide *which* pod gets each request, across all of them |
+
+Keeping them separate means you can swap the runtime or the scheduler without rebuilding the rest. The same idea as keeping your ingress separate from your app.
+
+The numbers they cite come from the llm-d project's own benchmarks, comparing round-robin with cache-aware routing on the same model: roughly double the token throughput, and up to about 57x faster time to first token at the 90th percentile. I'd treat those as "what's possible on a workload with lots of shared prompts", not as what any deployment will get. The useful takeaway is the reason: the model didn't change, only where requests were sent.
 
 ## A minimal example
 

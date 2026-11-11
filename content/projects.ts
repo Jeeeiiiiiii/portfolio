@@ -342,6 +342,56 @@ export const projects: Project[] = [
     ],
   },
 
+  // ------------------------------------------------------------------ //
+  {
+    slug: 'hybrid-training-platform',
+    title: 'Hybrid Training Platform',
+    tagline: 'train on your own servers first, overflow to the cloud',
+    status: 'in-design',
+    kind: 'project',
+    period: 'planned, nov 2026',
+    summary:
+      'One queue in front of two Kubernetes clusters, one standing in for a company\'s own servers and one on AWS. Training jobs run locally when there is room and spill over to cloud spot nodes when there is not, with a budget per team and the cost of every job measured.',
+    stack: ['Kubernetes', 'Kueue', 'MultiKueue', 'kind', 'EKS', 'Karpenter', 'MinIO', 'S3', 'Terraform', 'Argo CD', 'MLflow', 'Grafana'],
+    links: { post: 'hybrid-training-platform-design' },
+    purpose: [
+      'Companies that own servers want to use them first, because they are already paid for, and rent cloud capacity only for the peaks. It is also how most cloud migrations start: gradually, one workload at a time. The hard part is making the same job run in both places without engineers choosing where.',
+      'Modelled on how Uber put one job controller in front of many clusters while moving ML to the cloud, at a size one person can build and run.',
+    ],
+    ascii: `   engineer ─▶ training job (same YAML everywhere)
+                  │
+                  ▼
+   manager cluster: Kueue + MultiKueue
+      ├── room locally? ─▶ "own servers" cluster (kind/k3s)  ── MinIO
+      └── no ─▶ AWS EKS (spot, budget cap per team)          ── S3
+                  │
+   MLflow (one registry) · Grafana: utilisation, queue time, cost per job`,
+    decisions: [
+      {
+        title: 'Engineers do not pick the cluster',
+        why: 'A job says what it needs and whether it may run in the cloud. The queue decides where, local first. Moving fully to the cloud later is a priority change, not a rewrite.',
+      },
+      {
+        title: 'Same storage API on both sides',
+        why: 'MinIO locally and S3 on AWS both speak S3, so jobs do not change. A job whose data lives on one side is placed there, instead of copying data for every run.',
+      },
+      {
+        title: 'A cloud budget per team',
+        why: 'One forgotten multi-GPU job can cost more than everything else. Past its daily cap, a team\'s jobs wait for local capacity.',
+      },
+    ],
+    practices: [
+      'Cloud bursting with Kueue MultiKueue across two clusters.',
+      'Cost per training run measured on local servers and on several cloud instance types.',
+      'The same Terraform modules and Helm chart on both sides.',
+    ],
+    honest: ['Not built yet. This page is the plan; it will show measured results once they exist.'],
+    next: [
+      'Two local clusters and MultiKueue first, then the AWS side on the emulator, then one real EKS run with the bill published.',
+      'The deliberate failure: the cloud cluster disappears mid-burst, and nothing is lost.',
+    ],
+  },
+
   // ============================ labs ================================ //
   {
     slug: 'pipeline-lab',
