@@ -4,6 +4,7 @@ date: 2026-11-11
 excerpt: I ran an open-source payment app and broke its providers eight different ways to see what failover really does. It keeps customers paying, but in some failures it charges them twice. How I found it, the retry policy I chose, and the monitoring I built to catch the rest.
 tags: [Payments, SRE, Kubernetes, Observability]
 featured: 2
+kind: build
 ---
 
 *What you'll get: how I tested failover in a system I didn't write, the trade-off it exposed, and the monitoring and alerts I built around it.*

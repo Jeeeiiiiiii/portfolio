@@ -3,6 +3,7 @@ title: "GPUs on Kubernetes: what a DevOps engineer needs to know first"
 date: 2026-11-11
 excerpt: Kubernetes doesn't understand GPUs out of the box. These are my study notes on how a GPU node actually gets used - the NVIDIA GPU Operator, whole-GPU requests, sharing a GPU with time-slicing or MIG, the newer DRA API, and what to watch so expensive hardware isn't sitting idle.
 tags: [Kubernetes, GPU, LLMOps, NVIDIA]
+kind: notes
 ---
 
 *What you'll get: how a GPU goes from "plugged into a server" to "used by a pod", the ways to share one, and the questions I'd ask before running AI workloads on Kubernetes.*

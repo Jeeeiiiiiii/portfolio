@@ -26,6 +26,12 @@ export const postFrontmatterSchema = z.object({
   image: z.string().startsWith('/').optional(),
   /** the article a post responds to, credited at the end of the post */
   source: z.string().url().optional(),
+  /**
+   * What the post is: build = something I built and broke, design = a plan not
+   * built yet, notes = study notes. Groups the /blog page; missing means notes,
+   * the kind that claims the least.
+   */
+  kind: z.enum(['build', 'design', 'notes']).optional().default('notes'),
   /** drafts build in dev only */
   draft: z.boolean().optional().default(false),
   /**
@@ -34,6 +40,15 @@ export const postFrontmatterSchema = z.object({
    */
   featured: z.number().int().min(1).max(99).optional(),
 });
+
+export type PostKind = 'build' | 'design' | 'notes';
+
+/** The /blog page's groups, in the order they appear. */
+export const POST_KINDS: { kind: PostKind; label: string; note: string }[] = [
+  { kind: 'build', label: 'built and broken', note: 'systems I ran, broke on purpose and fixed' },
+  { kind: 'design', label: 'design plans', note: 'how I would build it — not built yet' },
+  { kind: 'notes', label: 'study notes', note: 'what I read, and how I understand it' },
+];
 
 /** How many posts the home page lists before "show all". */
 export const HOME_POSTS = 5;

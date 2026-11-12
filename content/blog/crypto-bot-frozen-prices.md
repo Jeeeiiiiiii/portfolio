@@ -4,6 +4,7 @@ date: 2026-11-11
 excerpt: I broke a trading bot's price feed on purpose and found it kept trading blind without a single warning. As the platform engineer I couldn't change the bot, so I built around it - an outside guard that stops it in 5 seconds, a stop that survives restarts, and alerts.
 tags: [Crypto, SRE, Kubernetes, Reliability]
 featured: 3
+kind: build
 ---
 
 *What you'll get: how I tested an app I didn't write, found a silent failure, and designed a platform-side fix that stops it within seconds and stays stopped.*

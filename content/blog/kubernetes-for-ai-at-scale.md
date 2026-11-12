@@ -4,6 +4,7 @@ date: 2026-11-11
 excerpt: In 2021 OpenAI wrote about training GPT-3 on a 7,500-node Kubernetes cluster. Five years later, clusters reach 100,000 nodes. My notes on which lessons still hold, which problems now have standard tools, and what matters for a team with 50 GPU nodes, not 50,000.
 tags: [Kubernetes, GPU, AI Infrastructure, Scaling]
 source: https://openai.com/index/scaling-kubernetes-to-7500-nodes/
+kind: notes
 ---
 
 *What you'll get: the problems you hit when Kubernetes runs AI training instead of web apps, how OpenAI handled them in 2021, and the tools that replace their workarounds in 2026.*

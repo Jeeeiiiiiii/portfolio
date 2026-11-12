@@ -1,6 +1,90 @@
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import Footer from '@/components/Footer';
+import { focusRing } from '@/components/PostList';
+import { getAllPosts, type Post } from '@/lib/blog';
 import { projects, statusLabel, kindLabel, type Project } from '@/content/projects';
+
+/** Built work first, then plans; within a status, the order in content/projects.ts. */
+const statusOrder: Record<Project['status'], number> = { shipped: 0, 'in-progress': 1, 'in-design': 2 };
+
+function StatusChip({ status }: { status: Project['status'] }) {
+  return (
+    <span
+      className={`micro !text-[9px] shrink-0 rounded-full border px-2 py-px ${
+        status === 'in-design' ? 'border-gray-300 !text-gray-500' : 'border-ink !text-ink'
+      }`}
+    >
+      {statusLabel[status]}
+    </span>
+  );
+}
+
+/**
+ * A main project as a full-width row. The whole row opens the project; the
+ * write-up link sits above that stretched link so it stays its own target.
+ */
+function ProjectRow({ project, index, post }: { project: Project; index: number; post?: Post }) {
+  return (
+    <li className="group relative -mx-4 grid grid-cols-[2rem_1fr] gap-x-3 rounded-xl px-4 py-6 transition-colors duration-200 hover:bg-gray-50 sm:grid-cols-[2.5rem_1fr_auto]">
+      <span className="section-label pt-1 tabular-nums transition-colors duration-200 group-hover:!text-ink">
+        {String(index).padStart(2, '0')}
+      </span>
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <h3 className="text-[1.15rem] font-semibold tracking-[-0.02em]">
+            <Link
+              href={`/projects/${project.slug}`}
+              className={`after:absolute after:inset-0 after:rounded-xl after:content-[''] ${focusRing}`}
+            >
+              {project.title}
+            </Link>
+          </h3>
+          <StatusChip status={project.status} />
+        </div>
+        <p className="mt-1 text-[13px] font-medium text-gray-600">{project.tagline}</p>
+        <p className="mt-3 max-w-[62ch] text-[14px] leading-relaxed text-gray-600">{project.summary}</p>
+        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+          <span className="micro !text-gray-500">{project.stack.slice(0, 4).join(' · ')}</span>
+          {post && (
+            <Link
+              href={`/blog/${post.slug}`}
+              className={`group/post relative z-10 inline-flex items-center gap-1.5 text-[13px] font-medium ${focusRing}`}
+            >
+              <span className="underline decoration-gray-300 underline-offset-4 transition-colors duration-200 group-hover/post:decoration-ink">
+                {post.kind === 'design' ? 'read the plan' : 'read the write-up'}
+              </span>
+              <span className="micro !text-gray-500">{post.readingMinutes} min</span>
+            </Link>
+          )}
+        </div>
+      </div>
+      <ArrowRight
+        className="hidden h-4 w-4 self-center text-gray-400 transition-[translate,color] duration-300 ease-[var(--ease-out-long)] group-hover:translate-x-1 group-hover:text-ink sm:block"
+        aria-hidden
+      />
+    </li>
+  );
+}
+
+function MainProjects({ items }: { items: Project[] }) {
+  if (items.length === 0) return null;
+  const posts = new Map(getAllPosts().map((p) => [p.slug, p]));
+  const ordered = [...items].sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
+  return (
+    <section className="mb-14">
+      <div className="flex items-baseline justify-between border-b border-gray-200 pb-4">
+        <h2 className="section-label">01 — projects</h2>
+        <span className="micro">{items.length} projects</span>
+      </div>
+      <ol className="divide-y divide-gray-200 border-b border-gray-200">
+        {ordered.map((p, i) => (
+          <ProjectRow key={p.slug} project={p} index={i + 1} post={p.links.post ? posts.get(p.links.post) : undefined} />
+        ))}
+      </ol>
+    </section>
+  );
+}
 
 export const metadata = {
   title: "Projects | Aurjei Steven Carreon",
@@ -12,7 +96,7 @@ function ProjectTile({ project }: { project: Project }) {
   return (
     <Link
       href={`/projects/${project.slug}`}
-      className="group flex flex-col border border-gray-200 rounded-xl p-5 bg-gray-50 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-300"
+      className={`group flex flex-col border border-gray-200 rounded-xl p-5 bg-gray-50 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5 transition-all duration-300 ${focusRing}`}
     >
       <div className="flex items-start justify-between gap-3 mb-1">
         <h2 className="text-[15px] font-semibold tracking-tight">{project.title}</h2>
@@ -24,8 +108,8 @@ function ProjectTile({ project }: { project: Project }) {
           {statusLabel[project.status]}
         </span>
       </div>
-      <p className="micro mb-3">{project.tagline}</p>
-      <p className="text-[13px] text-gray-500 leading-relaxed mb-4 flex-1">{project.summary}</p>
+      <p className="micro mb-3 !text-gray-500">{project.tagline}</p>
+      <p className="text-[13px] text-gray-600 leading-relaxed mb-4 flex-1">{project.summary}</p>
       <div className="flex items-center justify-between gap-3 border-t border-gray-200 pt-3">
         <div className="flex gap-1.5 flex-wrap">
           {project.stack.slice(0, 4).map((tech) => (
@@ -79,7 +163,7 @@ export default function ProjectsPage() {
           </p>
         </header>
 
-        <Section label="01 — projects" note={`${main.length} projects`} items={main} />
+        <MainProjects items={main} />
         <Section label="02 — labs" note={`${labs.length} labs · verified end to end on a local emulator`} items={labs} />
         <Section label="03 — earlier work" note={`${earlier.length} project${earlier.length === 1 ? '' : 's'}`} items={earlier} />
       </div>

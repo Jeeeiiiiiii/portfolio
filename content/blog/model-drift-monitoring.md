@@ -4,6 +4,7 @@ date: 2026-11-11
 excerpt: A model is trained on the past and used on the present. When the two drift apart, nothing crashes. This is how I think about drift, which kinds exist, what to monitor first, and what my fraud project's drift job does and doesn't catch.
 tags: [MLOps, Monitoring, Drift, Fraud Detection]
 source: https://huyenchip.com/2022/02/07/data-distribution-shifts-and-monitoring.html
+kind: notes
 ---
 
 *What you'll get: what drift is, the three kinds worth knowing, what to monitor in what order, and how a real drift job turns it into an alert. Built on Chip Huyen's write-up on distribution shifts, credited at the end, with my own fraud project as the example.*

@@ -4,6 +4,7 @@ date: 2026-11-11
 excerpt: Every health check was green, yet my fraud model was making decisions on scrambled data, like a translator using the wrong dictionary. This is the most common way machine learning fails in production. How I found it, and the tests that now stop it.
 tags: [MLOps, Fraud Detection, MLflow, Testing]
 featured: 1
+kind: build
 ---
 
 *What you'll get: what training-serving skew is, how it hid in a working fraud system, and the three tests that now catch it.*

@@ -3,6 +3,7 @@ title: "An AWS landing zone: how dev, staging and production stay apart"
 date: 2026-11-11
 excerpt: Most teams start with one AWS account and regret it. These are my notes on how a landing zone separates environments into accounts, how engineers get access, which guardrails stop mistakes, and how a release moves from dev to production without anyone holding production keys.
 tags: [AWS, Security, Control Tower, Platform Engineering]
+kind: notes
 ---
 
 *What you'll get: what a landing zone is, how to lay out accounts for dev, staging and production, how access and guardrails work, and how releases get promoted between them.*

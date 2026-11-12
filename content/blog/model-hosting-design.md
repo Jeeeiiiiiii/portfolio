@@ -3,6 +3,7 @@ title: "From trained model to live endpoint in one pull request — the plan"
 date: 2026-11-11
 excerpt: Data scientists can train a model in a day, then wait weeks for infrastructure. This is the design for my Model Hosting Platform, one supported path where a team adds one file and gets an endpoint with gradual rollout, automatic rollback, scale-to-zero and cost per team.
 tags: [MLOps, Platform Engineering, KServe, Design]
+kind: design
 ---
 
 *What you'll get: why teams need one supported way to host models, the design I'm building, and what I'll measure. This is a plan for a project I'm building now. Nothing here is built yet; a follow-up post will show what happened.*

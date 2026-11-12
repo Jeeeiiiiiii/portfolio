@@ -32,6 +32,7 @@ an article), **write** (tidy his own post) or **revise** (change a draft).
    excerpt: <one or two sentences, under 250 characters — what the reader will learn>
    tags: [<2–5 tags, e.g. AWS, Kubernetes, FinOps, SRE, Terraform>]
    source: <the source URL>
+   kind: notes
    ---
    ```
 

@@ -3,6 +3,7 @@ title: "Training models on your own servers, with the cloud as overflow — the 
 date: 2026-11-11
 excerpt: Most cloud migrations happen gradually, with old servers and the cloud running side by side. This is my plan for a Hybrid Training Platform that practises that stage - the same training jobs run on local servers first and spill over to AWS when they're full, with the cost of every job measured.
 tags: [MLOps, Kubernetes, Hybrid Cloud, Design]
+kind: design
 ---
 
 *What you'll get: why companies run ML on their own servers and in the cloud at the same time, why I'm building this, the design I'm building, and what I'll measure. This is a plan for a project I'm building now. Nothing here is built yet; a follow-up post will show what happened.*
