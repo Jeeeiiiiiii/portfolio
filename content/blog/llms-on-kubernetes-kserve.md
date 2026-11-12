@@ -4,6 +4,7 @@ date: 2026-11-11
 excerpt: Serving a large language model isn't like serving a fraud model. These are my study notes on why - GPU memory, the KV cache, two phases per request - and how KServe's LLMInferenceService, vLLM and llm-d handle it on Kubernetes.
 tags: [Kubernetes, LLMOps, KServe, vLLM]
 source: https://developers.redhat.com/articles/2026/04/21/kserve-llm-d-optimized-gen-ai-inference
+kind: notes
 ---
 
 *What you'll get: why LLM serving needs different infrastructure, what each piece in the current open-source stack does, and how I'd start.*
@@ -43,15 +44,9 @@ How they fit, according to the KServe 0.17 release notes from March 2026: KServe
 
 ## How a request flows
 
-```text
-client ─▶ Gateway (Gateway API)
-            │
-            ▼
-        endpoint picker (llm-d scheduler)
-            │  scores each vLLM pod: prefix already cached? queue length?
-            ▼
-        vLLM pod ── prefill ─▶ decode ─▶ tokens streamed back
-            (optionally separate prefill and decode pods, KV cache passed between them)
+```diagram
+llm-serving-kserve
+A client calls a Gateway API gateway, which asks the llm-d endpoint picker to choose a vLLM pod, scoring each by whether the prompt prefix is already cached and by queue length. In the chosen pod, prefill reads the prompt and passes the KV cache to decode, which streams tokens back to the client. Prefill and decode can also run in separate pods.
 ```
 
 1. **The request arrives at a Gateway**, the Kubernetes standard for traffic coming into a cluster.

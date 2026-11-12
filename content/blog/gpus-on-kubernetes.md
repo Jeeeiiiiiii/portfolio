@@ -3,6 +3,7 @@ title: "GPUs on Kubernetes: what a DevOps engineer needs to know first"
 date: 2026-11-11
 excerpt: Kubernetes doesn't understand GPUs out of the box. These are my study notes on how a GPU node actually gets used - the NVIDIA GPU Operator, whole-GPU requests, sharing a GPU with time-slicing or MIG, the newer DRA API, and what to watch so expensive hardware isn't sitting idle.
 tags: [Kubernetes, GPU, LLMOps, NVIDIA]
+kind: notes
 ---
 
 *What you'll get: how a GPU goes from "plugged into a server" to "used by a pod", the ways to share one, and the questions I'd ask before running AI workloads on Kubernetes.*
@@ -29,15 +30,9 @@ If you've set CPU and memory requests, you already know the idea. The difference
 
 ## How a GPU gets to a pod
 
-```text
-GPU node
- ├─ NVIDIA driver            (talks to the hardware)
- ├─ container toolkit        (lets containers see the GPU)
- ├─ device plugin            ─▶ tells the kubelet: "this node has nvidia.com/gpu: 4"
- ├─ GPU feature discovery    ─▶ labels the node: GPU model, memory, MIG support
- └─ DCGM exporter            ─▶ GPU metrics for Prometheus
-
-scheduler: pod asks for nvidia.com/gpu: 1 ─▶ only nodes with a free GPU qualify
+```diagram
+gpu-node
+A GPU node runs the NVIDIA driver, the container toolkit, the device plugin, GPU feature discovery and the DCGM exporter. The device plugin tells the kubelet how many GPUs the node has, feature discovery labels the node with GPU model, memory and MIG support, and DCGM sends GPU metrics to Prometheus. The scheduler only places a pod asking for nvidia.com/gpu: 1 on a node with a free GPU.
 ```
 
 1. **The driver and container toolkit** make the GPU usable from inside a container.

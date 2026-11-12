@@ -82,3 +82,4 @@ Use these sections in order. Rename them to fit the post; skip one only when it 
       Fintech labs say "infrastructure around an existing open-source app", "PCI DSS-inspired"
       (never "compliant"), and "simulated / paper trading only".
 - [ ] Frontmatter is valid; add `featured: <n>` only for posts that belong in the home page's top five.
+- [ ] `kind` is right: `build` only for something actually built and run, `design` for a plan, `notes` for study notes (the default).

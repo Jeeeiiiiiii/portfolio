@@ -26,6 +26,12 @@ export const postFrontmatterSchema = z.object({
   image: z.string().startsWith('/').optional(),
   /** the article a post responds to, credited at the end of the post */
   source: z.string().url().optional(),
+  /**
+   * What the post is: build = something I built and broke, design = a plan not
+   * built yet, notes = study notes. Groups the /blog page; missing means notes,
+   * the kind that claims the least.
+   */
+  kind: z.enum(['build', 'design', 'notes']).optional().default('notes'),
   /** drafts build in dev only */
   draft: z.boolean().optional().default(false),
   /**
@@ -34,6 +40,15 @@ export const postFrontmatterSchema = z.object({
    */
   featured: z.number().int().min(1).max(99).optional(),
 });
+
+export type PostKind = 'build' | 'design' | 'notes';
+
+/** The /blog page's groups, in the order they appear. */
+export const POST_KINDS: { kind: PostKind; label: string; note: string }[] = [
+  { kind: 'build', label: 'built and broken', note: 'systems I ran, broke on purpose and fixed' },
+  { kind: 'design', label: 'design plans', note: 'how I would build it — not built yet' },
+  { kind: 'notes', label: 'study notes', note: 'what I read, and how I understand it' },
+];
 
 /** How many posts the home page lists before "show all". */
 export const HOME_POSTS = 5;
@@ -51,6 +66,8 @@ export interface Post extends PostFrontmatter {
   html: string;
   /** the post's h2s, for the table of contents */
   headings: Heading[];
+  /** estimated minutes to read the body, at least 1 */
+  readingMinutes: number;
 }
 
 function slugify(text: string): string {
@@ -66,7 +83,7 @@ function slugify(text: string): string {
 const sanitizeOptions: sanitizeHtml.IOptions = {
   allowedTags: [
     'h2', 'h3', 'h4', 'p', 'a', 'ul', 'ol', 'li', 'blockquote', 'pre', 'code',
-    'strong', 'em', 'del', 'hr', 'br', 'img', 'table', 'thead', 'tbody', 'tr', 'th', 'td',
+    'strong', 'em', 'del', 'hr', 'br', 'img', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'div',
   ],
   allowedAttributes: {
     // target/rel are only ever set by transformTags below, never taken from the post
@@ -80,7 +97,7 @@ const sanitizeOptions: sanitizeHtml.IOptions = {
   allowedSchemes: ['http', 'https', 'mailto'],
   allowedSchemesByTag: { img: ['https'] },
   allowProtocolRelative: false,
-  allowedClasses: { code: [/^language-[a-z0-9-]+$/] },
+  allowedClasses: { code: [/^language-[a-z0-9-]+$/], div: ['table-wrap'] },
   // external links open in a new tab; #anchors stay in the page
   transformTags: {
     a: (tagName, attribs) => {
@@ -94,13 +111,57 @@ const sanitizeOptions: sanitizeHtml.IOptions = {
   },
 };
 
+export const DIAGRAM_DIR = path.join(process.cwd(), 'public', 'diagrams', 'blog');
+const DIAGRAM_RE = /<p>DIAGRAM:([a-z0-9-]+)<\/p>/g;
+
+function escapeAttr(text: string): string {
+  return text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
+/** Width and height from a PNG header, so the page reserves the image's space before it loads. */
+function pngSize(file: string): { width: number; height: number } {
+  const head = fs.readFileSync(file).subarray(16, 24);
+  return { width: head.readUInt32BE(0), height: head.readUInt32BE(4) };
+}
+
+/**
+ * A ```diagram block names a diagram (first line) and gives its text
+ * alternative (the rest). The diagram is a PNG in public/diagrams/blog/, drawn
+ * in Eraser and exported in light mode (its dark export loses the arrows).
+ * Added after sanitising, from our own files, with escaped attributes.
+ */
+function inlineDiagrams(html: string, alts: Map<string, string>): string {
+  return html.replace(DIAGRAM_RE, (_, name: string) => {
+    const file = path.join(DIAGRAM_DIR, `${name}.png`);
+    if (!fs.existsSync(file)) throw new Error(`blog: diagram "${name}" has no file public/diagrams/blog/${name}.png`);
+    const { width, height } = pngSize(file);
+    const src = `/diagrams/blog/${name}.png`;
+    const alt = escapeAttr(alts.get(name) ?? '');
+    // never shrink below 4/5 of the export, so labels stay readable; narrower screens scroll
+    const minWidth = Math.round(width * 0.8);
+    return (
+      `<figure class="diagram"><div class="diagram-scroll">` +
+      `<a class="diagram-link" href="${src}" target="_blank" rel="noopener" style="min-width:${minWidth}px;max-width:${width}px">` +
+      `<img src="${src}" width="${width}" height="${height}" alt="${alt}" loading="lazy" decoding="async"></a></div></figure>`
+    );
+  });
+}
+
 export function renderMarkdown(markdown: string): { html: string; headings: Heading[] } {
   const headings: Heading[] = [];
   const seen = new Map<string, number>();
+  const diagramAlts = new Map<string, string>();
 
   const marked = new Marked({
     gfm: true,
     renderer: {
+      code(token: Tokens.Code) {
+        if (token.lang !== 'diagram') return false;
+        const [name = '', ...alt] = token.text.trim().split('\n');
+        if (!/^[a-z0-9-]+$/.test(name)) throw new Error(`blog: bad diagram name "${name}"`);
+        diagramAlts.set(name, alt.join(' ').trim());
+        return `<p>DIAGRAM:${name}</p>\n`;
+      },
       heading(this: { parser: { parseInline(tokens: Tokens.Generic[]): string } }, token: Tokens.Heading) {
         // a post's title is the page h1, so body headings start at h2
         const depth = Math.min(Math.max(token.depth, 2), 4);
@@ -114,8 +175,12 @@ export function renderMarkdown(markdown: string): { html: string; headings: Head
     },
   });
 
-  const raw = marked.parse(markdown, { async: false });
-  return { html: sanitizeHtml(raw, sanitizeOptions), headings };
+  // wide tables scroll inside their own box instead of squeezing their columns
+  const raw = marked
+    .parse(markdown, { async: false })
+    .replace(/<table>/g, '<div class="table-wrap"><table>')
+    .replace(/<\/table>/g, '</table></div>');
+  return { html: inlineDiagrams(sanitizeHtml(raw, sanitizeOptions), diagramAlts), headings };
 }
 
 /** Parse one post from its file contents. Throws with the slug in the message on bad frontmatter. */
@@ -127,7 +192,15 @@ export function parsePost(slug: string, source: string): Post {
     const issues = parsed.error.issues.map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`).join('; ');
     throw new Error(`blog: ${slug}.md has invalid frontmatter — ${issues}`);
   }
-  return { slug, ...parsed.data, ...renderMarkdown(content) };
+  return { slug, ...parsed.data, ...renderMarkdown(content), readingMinutes: readingMinutes(content) };
+}
+
+const WORDS_PER_MINUTE = 230;
+
+/** Reading time for a markdown body; code blocks and markup count as words, which is close enough. */
+export function readingMinutes(markdown: string): number {
+  const words = markdown.split(/\s+/).filter((w) => /[A-Za-z0-9]/.test(w)).length;
+  return Math.max(1, Math.round(words / WORDS_PER_MINUTE));
 }
 
 function includeDrafts(): boolean {

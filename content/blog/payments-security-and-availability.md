@@ -4,6 +4,7 @@ date: 2026-11-11
 excerpt: The DevOps choices I made around a payments app, and why - only signed images can run, Git is the only way to change the cluster, pods reach only what they need, and alerts keep working when parts fail. Each with the alternative I rejected and the check that proves it.
 tags: [Payments, Security, Kubernetes, Supply Chain]
 featured: 4
+kind: build
 ---
 
 *What you'll get: six platform decisions, what each one stops, what I chose against, and the test that proves it works.*

@@ -276,3 +276,76 @@ body {
 }
 .article-body .table-of-contents li { margin-bottom: 0; }
 .article-body [class*="text-gray-"] { color: var(--gray-500) !important; }
+
+/* tables: ruled rows, sans header, scroll sideways on narrow screens */
+.article-body .table-wrap {
+  overflow-x: auto;
+  margin: 1.5rem 0 2rem;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+}
+.article-body table {
+  width: 100%;
+  min-width: 34rem;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.article-body th,
+.article-body td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.65rem 0.9rem;
+  border-bottom: 1px solid var(--gray-200);
+}
+.article-body tr > :not(:last-child) {
+  border-right: 1px solid var(--gray-200);
+}
+.article-body tbody tr:last-child > * {
+  border-bottom: 0;
+}
+.article-body th {
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  background: var(--gray-50);
+}
+.article-body td {
+  color: var(--gray-700);
+}
+.article-body td:first-child {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* diagrams: Eraser PNGs on a light card in both themes. On wide screens the
+   figure breaks out of the text column (centred on it, clear of the sidebar);
+   below the image's minimum width it scrolls sideways */
+.article-body .diagram {
+  margin: 1.75rem 0 2.25rem;
+}
+@media (min-width: 1024px) {
+  .article-body .diagram {
+    width: min(80rem, calc(100vw - 14rem - 4rem));
+    margin-left: 50%;
+    transform: translateX(-50%);
+  }
+}
+.article-body .diagram-scroll {
+  overflow-x: auto;
+}
+.article-body .diagram-link {
+  display: block;
+  margin: 0 auto;
+  padding: 0.75rem;
+  background: #ffffff;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+}
+.article-body .diagram img {
+  display: block;
+  width: 100%;
+  height: auto;
+}

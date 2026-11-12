@@ -3,6 +3,7 @@ title: "Training models on your own servers, with the cloud as overflow — the 
 date: 2026-11-11
 excerpt: Most cloud migrations happen gradually, with old servers and the cloud running side by side. This is my plan for a Hybrid Training Platform that practises that stage - the same training jobs run on local servers first and spill over to AWS when they're full, with the cost of every job measured.
 tags: [MLOps, Kubernetes, Hybrid Cloud, Design]
+kind: design
 ---
 
 *What you'll get: why companies run ML on their own servers and in the cloud at the same time, why I'm building this, the design I'm building, and what I'll measure. This is a plan for a project I'm building now. Nothing here is built yet; a follow-up post will show what happened.*
@@ -36,20 +37,9 @@ If you've migrated apps to AWS, you know containers, Terraform and DNS cutovers.
 
 ## The design
 
-```text
-engineer submits a training job (same YAML everywhere)
-   │
-   ▼
-manager cluster: Kueue with MultiKueue
-   │  is there room on our own servers?
-   ├── yes ─▶ on-prem cluster (local kind / k3s)   data: MinIO (S3 API)
-   └── no, and the job allows cloud ─▶ AWS EKS cluster (spot nodes)   data: S3
-                                        │
-                                        └─ budget cap per team per day
-   │
-   ▼
-results and models ─▶ MLflow (one registry for both)
-utilisation and cost per cluster ─▶ Grafana
+```diagram
+hybrid-training
+An engineer submits a training job, the same YAML everywhere. A manager cluster running Kueue with MultiKueue sends it to the on-prem cluster (kind or k3s, data in MinIO) when there is room, or to an AWS EKS cluster on spot nodes (data in S3) when local capacity is full and the job allows cloud, within a daily budget per team. Both send models to one MLflow registry and report utilisation and cost to Grafana.
 ```
 
 1. **An engineer submits a normal Kubernetes job.** It says what it needs (CPU, memory, GPUs) and whether it may run in the cloud. It doesn't say where.

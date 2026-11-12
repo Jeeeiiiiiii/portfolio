@@ -3,6 +3,7 @@ title: "An AWS landing zone: how dev, staging and production stay apart"
 date: 2026-11-11
 excerpt: Most teams start with one AWS account and regret it. These are my notes on how a landing zone separates environments into accounts, how engineers get access, which guardrails stop mistakes, and how a release moves from dev to production without anyone holding production keys.
 tags: [AWS, Security, Control Tower, Platform Engineering]
+kind: notes
 ---
 
 *What you'll get: what a landing zone is, how to lay out accounts for dev, staging and production, how access and guardrails work, and how releases get promoted between them.*
@@ -26,18 +27,9 @@ If you know Kubernetes namespaces, an AWS account is closer to a whole separate 
 
 ## The layout
 
-```text
-Organization (management account: billing and Control Tower only, no workloads)
-├── Security OU
-│   ├── Log Archive      every account's CloudTrail and Config logs, locked down
-│   └── Audit            security tooling: GuardDuty, Security Hub (delegated admin)
-├── Infrastructure OU
-│   ├── Network          Transit Gateway, shared VPCs, DNS
-│   └── Shared Services  CI/CD, container registry (ECR)
-├── Workloads OU
-│   ├── NonProd OU ─ dev account, staging account
-│   └── Prod OU    ─ prod account
-└── Sandbox OU           personal experiments, strict budget, no connection to the rest
+```diagram
+landing-zone-accounts
+The management account handles billing and Control Tower only, with no workloads. Under it: a Security OU with the Log Archive account (every account's CloudTrail and Config logs) and the Audit account (GuardDuty, Security Hub); an Infrastructure OU with the Network account (Transit Gateway, shared VPCs, DNS) and Shared Services (CI/CD, ECR); a Workloads OU with a NonProd OU (dev and staging accounts) and a Prod OU (prod account); and a Sandbox OU for personal experiments with a strict budget and no connection to the rest.
 ```
 
 An **OU** (organizational unit) is a folder of accounts that share rules. Control Tower creates the Security OU with its Log Archive and Audit accounts. The rest you add in AWS Organizations.
@@ -99,13 +91,9 @@ SCP mistakes cause outages, so guardrails are code: kept in Git, reviewed, teste
 
 ## How a release is promoted
 
-```text
-git push ─▶ CI in Shared Services (GitHub OIDC, no stored keys)
-              build once ─▶ image in ECR, tagged by commit, signed
-                 │
-                 ├─▶ assume deploy role in dev      ─▶ deploy ─▶ tests
-                 ├─▶ assume deploy role in staging  ─▶ deploy ─▶ tests
-                 └─▶ approval ─▶ assume deploy role in prod ─▶ deploy
+```diagram
+landing-zone-delivery
+A git push starts CI in Shared Services, which uses GitHub OIDC and stores no keys. It builds the image once, tags it by commit, signs it and stores it in ECR. Deploys to dev and staging each assume that account's deploy role, deploy and run tests; production needs an approval first, then assumes its deploy role and deploys.
 ```
 
 1. **Build once.** The pipeline builds the image a single time and stores it in a shared ECR registry. Every environment runs that exact image, by digest. What passed staging is byte for byte what reaches production.

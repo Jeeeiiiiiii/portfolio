@@ -4,6 +4,7 @@ date: 2026-11-11
 excerpt: The platform decisions I made to run trading bots safely without changing their code - network rules that let a bot reach only two services, per-bot permissions on the message broker, secrets encrypted in Git, and a stop that only a person can undo.
 tags: [Crypto, Security, Kubernetes, GitOps]
 featured: 5
+kind: build
 ---
 
 *What you'll get: six platform decisions, what each one stops, what I chose against, and the test that proves it.*
