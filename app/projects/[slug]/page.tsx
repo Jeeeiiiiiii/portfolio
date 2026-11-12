@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import Footer from '@/components/Footer';
 import DiagramFrame from '@/components/DiagramFrame';
+import { diagramImage, diagramMinWidth } from '@/lib/blog';
 import { getProject, projects, projectSlugs, statusLabel, kindLabel } from '@/content/projects';
 
 type Params = Promise<{ slug: string }>;
@@ -95,7 +96,7 @@ export default async function ProjectPage({ params }: { params: Params }) {
                 see it live →
               </Link>
             )}
-            {project.links.diagram && (
+            {(project.links.diagram || project.diagrams?.length) && (
               <a href="#architecture" className="micro hover:text-ink transition-colors duration-200">
                 jump to diagram ↓
               </a>
@@ -129,9 +130,30 @@ export default async function ProjectPage({ params }: { params: Params }) {
           </div>
         </Section>
 
-        {(project.ascii || project.links.diagram) && (
+        {(project.ascii || project.links.diagram || project.diagrams?.length) && (
           <section id="architecture" className="mb-12 scroll-mt-8">
             <h2 className="section-label border-b border-gray-200 pb-3 mb-5">{num()} — architecture</h2>
+            {project.diagrams?.map((d) => {
+              const img = diagramImage(d.name);
+              return (
+                <figure
+                  key={d.name}
+                  // wider than the text column on desktop, centred on it and clear of the sidebar
+                  className="mb-4 overflow-x-auto lg:relative lg:left-1/2 lg:w-[min(80rem,calc(100vw-18rem))] lg:-translate-x-1/2"
+                >
+                  <a
+                    href={img.src}
+                    target="_blank"
+                    rel="noopener"
+                    className="block mx-auto rounded-2xl border border-gray-200 bg-white p-3"
+                    style={{ minWidth: diagramMinWidth(img.width), maxWidth: img.width }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element -- static PNG, sized from its header */}
+                    <img src={img.src} width={img.width} height={img.height} alt={d.alt} loading="lazy" className="block w-full h-auto" />
+                  </a>
+                </figure>
+              );
+            })}
             {project.links.diagram && (
               <div className="mb-4">
                 <DiagramFrame src={project.links.diagram} title={`${project.title} architecture diagram`} />

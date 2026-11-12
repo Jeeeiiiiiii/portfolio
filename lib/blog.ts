@@ -119,9 +119,25 @@ function escapeAttr(text: string): string {
 }
 
 /** Width and height from a PNG header, so the page reserves the image's space before it loads. */
-function pngSize(file: string): { width: number; height: number } {
+export function pngSize(file: string): { width: number; height: number } {
   const head = fs.readFileSync(file).subarray(16, 24);
   return { width: head.readUInt32BE(0), height: head.readUInt32BE(4) };
+}
+
+/**
+ * The narrowest a diagram may be drawn: 4/5 of the export so labels stay
+ * readable (narrower screens scroll), but never wider than fits a 1920px
+ * screen's breakout (1240px), so the widest diagrams don't scroll on desktop.
+ */
+export function diagramMinWidth(width: number): number {
+  return Math.min(Math.round(width * 0.8), 1240);
+}
+
+/** A diagram's public URL and pixel size; throws if its PNG is missing. */
+export function diagramImage(name: string): { src: string; width: number; height: number } {
+  const file = path.join(DIAGRAM_DIR, `${name}.png`);
+  if (!fs.existsSync(file)) throw new Error(`diagram "${name}" has no file public/diagrams/blog/${name}.png`);
+  return { src: `/diagrams/blog/${name}.png`, ...pngSize(file) };
 }
 
 /**
@@ -137,8 +153,7 @@ function inlineDiagrams(html: string, alts: Map<string, string>): string {
     const { width, height } = pngSize(file);
     const src = `/diagrams/blog/${name}.png`;
     const alt = escapeAttr(alts.get(name) ?? '');
-    // never shrink below 4/5 of the export, so labels stay readable; narrower screens scroll
-    const minWidth = Math.round(width * 0.8);
+    const minWidth = diagramMinWidth(width);
     return (
       `<figure class="diagram"><div class="diagram-scroll">` +
       `<a class="diagram-link" href="${src}" target="_blank" rel="noopener" style="min-width:${minWidth}px;max-width:${width}px">` +
