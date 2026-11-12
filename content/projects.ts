@@ -840,43 +840,6 @@ export const projects: Project[] = [
       'Run app/ through pipeline-lab; the eval gate becomes a stage between build and deploy.',
     ],
   },
-
-  // ------------------------------------------------------------------ //
-
-  // ------------------------------------------------------------------ //
-  {
-    slug: 'patient-monitoring',
-    title: 'Patient Monitoring System',
-    tagline: 'two-tier aws with terraform, qr-coded records',
-    status: 'shipped',
-    kind: 'earlier',
-    period: '2024 — 2025',
-    summary:
-      'A patient monitoring system where a QR code on the wristband opens the patient\'s record, deployed on a two-tier AWS architecture provisioned with Terraform: application tier in public subnets, database tier in private ones.',
-    stack: ['AWS', 'Terraform', 'EC2', 'RDS', 'VPC', 'PHP', 'MySQL'],
-    links: {},
-    purpose: [
-      'The capstone project: a working application and the infrastructure under it, both written down as code so the environment could be rebuilt from nothing.',
-    ],
-    decisions: [
-      {
-        title: 'Two tiers, two subnets',
-        why: 'The application layer and the database layer are separated so each can be scaled and secured on its own. The database has no public address.',
-      },
-      {
-        title: 'Terraform for everything',
-        why: 'VPC, subnets, security groups, EC2 and RDS are all declared. Standing the environment up again is one apply, not a checklist.',
-      },
-    ],
-    practices: [
-      'Infrastructure as code from day one, with the write-up published as a blog post.',
-      'Application delivery through a GitOps-style flow so deploying a change did not mean logging into the box.',
-    ],
-    honest: [
-      'This is where the labs started: the blog post on deploying a two-tier architecture with Terraform came out of this project.',
-    ],
-    next: [],
-  },
 ];
 
 export const projectSlugs = projects.map((p) => p.slug);
