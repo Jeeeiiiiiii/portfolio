@@ -37,20 +37,9 @@ If you've migrated apps to AWS, you know containers, Terraform and DNS cutovers.
 
 ## The design
 
-```text
-engineer submits a training job (same YAML everywhere)
-   │
-   ▼
-manager cluster: Kueue with MultiKueue
-   │  is there room on our own servers?
-   ├── yes ─▶ on-prem cluster (local kind / k3s)   data: MinIO (S3 API)
-   └── no, and the job allows cloud ─▶ AWS EKS cluster (spot nodes)   data: S3
-                                        │
-                                        └─ budget cap per team per day
-   │
-   ▼
-results and models ─▶ MLflow (one registry for both)
-utilisation and cost per cluster ─▶ Grafana
+```diagram
+hybrid-training
+An engineer submits a training job, the same YAML everywhere. A manager cluster running Kueue with MultiKueue sends it to the on-prem cluster (kind or k3s, data in MinIO) when there is room, or to an AWS EKS cluster on spot nodes (data in S3) when local capacity is full and the job allows cloud, within a daily budget per team. Both send models to one MLflow registry and report utilisation and cost to Grafana.
 ```
 
 1. **An engineer submits a normal Kubernetes job.** It says what it needs (CPU, memory, GPUs) and whether it may run in the cloud. It doesn't say where.

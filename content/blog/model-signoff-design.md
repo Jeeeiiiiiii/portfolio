@@ -27,21 +27,9 @@ If you know CI/CD, you know most of this already: tests run, a reviewer approves
 
 ## The design
 
-```text
-new model ─▶ evaluation gate ─────────────────────────────▶ report
-             same frozen test set as the current model
-             must win on the agreed metric AND pass stability checks
-                  │ pass
-                  ▼
-             tagged @challenger
-                  │
-                  ▼
-             pull request: point @champion at the new version
-                  │  risk reviewer must approve (CODEOWNERS)
-                  ▼
-             merged ─▶ Argo CD applies it ─▶ evidence pack saved
-                                              model card, data hash,
-                                              report, approver, date
+```diagram
+model-signoff
+Training registers a new version in MLflow. The evaluation gate scores it on the same frozen test set as the current @champion; it must win on the agreed metric and pass stability checks, and it writes a report a non-engineer can read. A version that passes is tagged @challenger. Promotion is a pull request pointing @champion at it, which a risk reviewer must approve through CODEOWNERS. On merge, Argo CD applies it and an evidence pack is saved: model card, data hash, report, approver and date.
 ```
 
 1. **Training finishes and registers the model** in MLflow, the model registry.

@@ -39,21 +39,16 @@ If you run web services, you already know retries, timeouts and health checks. T
 
 ## How a payment flows, and where it breaks
 
-```text
-customer ─▶ Hyperswitch ─▶ provider A (fails on demand)
-                │   └─ retry rule matches? ─▶ provider B (healthy)
-                ▼
-             Postgres ◀── reconciler (every 15 s, read-only)
-                              │ provider charges vs stored payments
-                              ▼
-             Prometheus ─▶ Alertmanager ─▶ Slack
+```diagram
+payments-failover
+The customer pays through Hyperswitch, which stores each payment in Postgres and charges provider A. Provider A fails on demand; when a retry rule matches, Hyperswitch retries on provider B. Both providers are one mock service, which publishes a settlement report of what it charged. A read-only reconciler runs every 60 seconds (every 15 in the alert tests), compares that report with the payments it reads from the Hyperswitch API, and exposes the result as metrics. Prometheus scrapes them and alerts through Alertmanager to a Slack webhook, tested so far with a stand-in.
 ```
 
 1. **The shop sends a payment** to Hyperswitch, which routes it to provider A.
 2. **Provider A fails** in one of eight ways I can choose: declines the card, is slow, returns 500 or 503, hangs, resets the connection, or does one of those *after* charging.
 3. **Hyperswitch checks its retry rules.** If the error matches a rule, it retries on provider B. If not, the payment stays `processing`.
-4. **Every 15 seconds, a reconciliation job** reads each provider's charges and compares them with Hyperswitch's stored payments. It only reports, because moving money back is a decision for a person.
-5. **Alertmanager sends findings to Slack:** a double charge, a hidden charge, a payment stuck in `processing`, or a provider burning through its error budget.
+4. **Every 60 seconds, a reconciliation job** reads the providers' settlement report and compares it with the payments it reads from Hyperswitch's API (I set it to 15 seconds for the alert tests). It only reports, because moving money back is a decision for a person.
+5. **Alertmanager sends findings to a Slack webhook** (so far a stand-in, not a real workspace): a double charge, a hidden charge, a payment stuck in `processing`, or a provider burning through its error budget.
 
 ## What I found
 
@@ -112,8 +107,8 @@ These results show how the orchestrator behaves *when* a failure happens. They s
 | In the lab | In production |
 |---|---|
 | A mock provider | Real providers, with their own settlement report formats and timing |
-| Reconciliation every 15 seconds | Daily settlement files, plus near-real-time checks where providers allow it |
-| One Slack channel | On-call paging with escalation, and a second channel if Slack is down |
+| Reconciliation every 60 seconds | Daily settlement files, plus near-real-time checks where providers allow it |
+| One Slack webhook, tested with a stand-in | On-call paging with escalation, and a second channel if Slack is down |
 | kind on a laptop | A managed Kubernetes cluster; same manifests |
 
 ## FAQ

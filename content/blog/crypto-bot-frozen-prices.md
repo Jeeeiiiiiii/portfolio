@@ -41,21 +41,14 @@ If you run services, you know health checks and restarts. A trading bot breaks b
 
 ## How the guard works
 
-```text
-mock exchange ── prices ──▶ bot (Hummingbot, paper trading)
-      │                      │ orders (from its log)
-      │ its own feed         ▼
-      └──────────────────▶ guard ── halts on:
-                             • 5 s with no market data
-                             • an order more than 5 bps through the best price
-                           │
-                           ├─▶ MQTT "stop" (retried until acknowledged)
-                           └─▶ halt file the bot can read but not change
+```diagram
+crypto-guard
+The mock exchange sends prices to the bot and a separate feed to the guard. The guard reads the bot's orders from its log and halts it after 5 seconds with no market data, or when an order is more than 5 basis points through the best price. To halt, it sends a stop command over MQTT, retried up to six times until acknowledged, and writes a halt file the bot can only read; the bot refuses to start while it exists. The guard's metrics go to Prometheus, which alerts through Alertmanager to a Slack webhook.
 ```
 
 1. **The guard subscribes to the market itself.** If it hears nothing for 5 seconds, it halts every bot on that market. That catches a freeze at the exchange.
 2. **It also checks each new order against the real best price.** An order more than 5 basis points (0.05%) through the market means the bot's view is wrong, even if the exchange is fine.
-3. **To halt, it sends the bot's own stop command** over MQTT, which cancels open orders, and repeats it until the bot acknowledges.
+3. **To halt, it sends the bot's own stop command** over MQTT, which cancels open orders, and repeats it, up to six times, until the bot acknowledges.
 4. **It writes a halt file** into a folder the bot can only read. The bot's startup script refuses to start while that file exists.
 5. **Only a person can resume,** and only with a note saying why it's safe. The note is kept with the halt.
 

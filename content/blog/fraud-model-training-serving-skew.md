@@ -39,17 +39,13 @@ If you work in DevOps, you already know most of what a model service needs: a co
 
 ## How a payment gets scored
 
-```text
-offline, on a schedule                      live, for each payment
-transactions ─▶ history features ─▶ Redis   payment ─▶ enrichment ─▶ scoring API
-                (past data only)      │                    ▲              │
-                      │               └───── history ──────┘     allow / review / block
-                      ▼
-                 training ─▶ MLflow (model + encoders) ─▶ loaded by the scoring API
+```diagram
+fraud-scoring
+Offline, a batch job turns transactions into history features using past data only. They go to feature tables, which Feast loads into Redis, and to training with XGBoost and Optuna, which saves the model and its encoders to MLflow. Live, each payment goes to the scoring API, which loads the model and encoders from MLflow at startup, asks the enrichment service for history from Redis plus live counts within half a second, and returns allow, review or block.
 ```
 
-1. **A scheduled job computes history features** for every customer and merchant, such as their average amount over 30 days. It only looks at the past, and it writes the results to Redis.
-2. **A payment arrives.** The enrichment service looks up that customer's history in Redis and adds live counts, like how many payments in the last hour.
+1. **A batch job computes history features** for every customer and merchant, such as their average amount over 30 days. It only looks at the past. Feast then loads the latest values into Redis. In the lab a bootstrap script runs this once; it isn't on a schedule yet.
+2. **A payment arrives at the scoring API,** which asks the enrichment service for that customer's history from Redis plus live counts, like how many payments in the last hour. If enrichment takes longer than half a second, scoring carries on with neutral defaults.
 3. **The scoring API turns everything into numbers** the model understands, including words like "visa" or "debit".
 4. **The model returns a score,** and two thresholds turn it into allow, review or block.
 5. **The prediction is stored.** When the real outcome is known later (a chargeback, or a reviewer's decision), it's joined back, so the real false positive rate can be measured.

@@ -44,15 +44,9 @@ How they fit, according to the KServe 0.17 release notes from March 2026: KServe
 
 ## How a request flows
 
-```text
-client ─▶ Gateway (Gateway API)
-            │
-            ▼
-        endpoint picker (llm-d scheduler)
-            │  scores each vLLM pod: prefix already cached? queue length?
-            ▼
-        vLLM pod ── prefill ─▶ decode ─▶ tokens streamed back
-            (optionally separate prefill and decode pods, KV cache passed between them)
+```diagram
+llm-serving-kserve
+A client calls a Gateway API gateway, which asks the llm-d endpoint picker to choose a vLLM pod, scoring each by whether the prompt prefix is already cached and by queue length. In the chosen pod, prefill reads the prompt and passes the KV cache to decode, which streams tokens back to the client. Prefill and decode can also run in separate pods.
 ```
 
 1. **The request arrives at a Gateway**, the Kubernetes standard for traffic coming into a cluster.

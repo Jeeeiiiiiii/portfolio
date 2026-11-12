@@ -46,24 +46,9 @@ The pattern: in 2021 OpenAI had to build workarounds. In 2026 most of those prob
 
 ## How a training job flows today
 
-```text
-researcher submits a training job (64 nodes × 8 GPUs)
-   │
-   ▼
-Kueue: is the team under its quota? are 64 nodes free?
-   │  no ─▶ wait in the team's queue (nothing is half-started)
-   │  yes
-   ▼
-all 64 pods admitted together (gang scheduling)
-   │
-   ▼
-nodes with healthy GPUs only (DCGM health checks, unhealthy nodes tainted)
-   │
-   ▼
-training: GPUs exchange data over EFA / InfiniBand
-   │
-   ▼
-a GPU fails mid-run ─▶ node marked unhealthy ─▶ job restarts from its last checkpoint
+```diagram
+ai-training-at-scale
+A researcher submits a training job for 64 nodes with 8 GPUs each. Kueue checks the team's quota and whether 64 nodes are free; if not, the job waits in the team's queue with nothing half-started. When there is room, all 64 pods are admitted together (gang scheduling), only onto nodes with healthy GPUs according to DCGM checks, and training exchanges data between GPUs over EFA or InfiniBand.
 ```
 
 1. **A job asks for all its resources at once.**

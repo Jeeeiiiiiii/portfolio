@@ -249,7 +249,7 @@ export const projects: Project[] = [
     period: 'nov 2026 —',
     summary:
       'A release process for models at a regulated company: every new model is tested against the one in production on the same data, promoted only through a pull request a risk reviewer approves, and leaves an evidence pack an auditor can read months later.',
-    stack: ['MLflow 3', 'XGBoost', 'scikit-learn', 'Python', 'pytest', 'GitHub Actions', 'Argo Workflows', 'Argo CD', 'kind', 'SageMaker'],
+    stack: ['MLflow 3', 'Argo Workflows', 'Argo CD', 'Kubernetes', 'kind', 'XGBoost', 'scikit-learn', 'Python', 'pytest', 'GitHub Actions'],
     links: { post: 'model-signoff-design' },
     purpose: [
       'At a bank, a model cannot go live because its author says it is better. Someone has to prove it beats the current model on the same test, someone from risk has to sign it off, and an auditor must be able to see who approved what. Without a platform this is spreadsheets, screenshots and email.',
@@ -297,10 +297,11 @@ export const projects: Project[] = [
     honest: [
       'Measured on the UCI credit card default data (30,000 real card holders): logistic regression v1 at 0.712 AUC, XGBoost v2 at 0.775 and approved, XGBoost with five engineered features v3 at 0.780 but blocked, because AUC for customers with other or unknown education fell from 0.708 to 0.656. 9 of 9 scenario checks pass.',
       'That blocking group has only 103 customers in the test set, so the drop is noisy. A real gate would add confidence intervals before blocking on a small group.',
-      'Runs locally on a SQLite MLflow registry. The CI workflow is written but has not run, because the repo has no remote yet. Argo Workflows, the fraud model and the SageMaker comparison are not built.',
+      'On kind: Argo Workflows trains and gates each model in 30 to 50 seconds, approval is a Git commit, and Argo CD applies it 13 to 51 seconds later. An approval without a named approver and an approval for the blocked model both failed the sync and left the model in use unchanged; 9 of 9 cluster checks pass.',
+      'What broke: MLflow 3.18 was OOM-killed until its background job workers (1.9 GB) were switched off; the frozen test set hashed differently on Windows and in Linux pods because of CSV line endings, and the guard refused to run until that was pinned; the Argo executor containers were refused by the restricted Pod Security level until the executor was configured for it.',
+      'Lab shortcuts: a local Git server stands in for GitHub, the CI workflow has not run, the Argo UI has no login. The fraud model and the SageMaker comparison are not built.',
     ],
     next: [
-      'Run train and gate as an Argo Workflows pipeline on kind, with Argo CD applying promotions.',
       'Onboard the fraud model as the second team and count the steps.',
       'Bootstrap confidence intervals for the per-group checks.',
       'The same model on SageMaker once, compared on setup time, cost and effort.',

@@ -27,21 +27,9 @@ If you've hosted web services on Kubernetes, you already know 80% of this. The r
 
 ## The design
 
-```text
-team adds serving/credit-model.yaml
-   │
-   ▼
-CI checks the file against a schema ─▶ a shared Helm chart renders a KServe endpoint
-   │
-   ▼
-Argo CD deploys it
-   ├─ canary: 10% of traffic to the new version
-   │     latency or errors over target? ─▶ roll back on its own
-   ├─ idle? ─▶ scale to zero (Knative)
-   └─ cost per team (OpenCost)
-
-apps ─▶ LLM gateway ─▶ Claude API | a small local model
-        per-team keys, token budgets, fallback, usage metrics
+```diagram
+model-hosting
+A team adds one file, serving/credit-model.yaml. CI checks it against a schema, a shared Helm chart renders a KServe endpoint, and Argo CD deploys it with 10% of traffic on the new version. If latency or errors pass the target, it rolls back on its own. Idle endpoints scale to zero with Knative, and OpenCost shows cost per team. Separately, apps call LLMs through a gateway that holds per-team keys, token budgets and usage metrics, and falls back from the Claude API to a small local model.
 ```
 
 1. **A team adds one file:** which model (an MLflow alias), how much CPU and memory, the latency target, the owner, and minimum and maximum replicas.
