@@ -142,8 +142,7 @@ function inlineDiagrams(html: string, alts: Map<string, string>): string {
     return (
       `<figure class="diagram"><div class="diagram-scroll">` +
       `<a class="diagram-link" href="${src}" target="_blank" rel="noopener" style="min-width:${minWidth}px;max-width:${width}px">` +
-      `<img src="${src}" width="${width}" height="${height}" alt="${alt}" loading="lazy" decoding="async"></a></div>` +
-      `<figcaption>diagram made with Eraser · <a href="${src}" target="_blank" rel="noopener">open full size</a></figcaption></figure>`
+      `<img src="${src}" width="${width}" height="${height}" alt="${alt}" loading="lazy" decoding="async"></a></div></figure>`
     );
   });
 }

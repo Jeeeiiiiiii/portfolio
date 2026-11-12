@@ -349,15 +349,3 @@ body {
   width: 100%;
   height: auto;
 }
-.article-body .diagram figcaption {
-  margin-top: 0.5rem;
-  text-align: center;
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 10px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--gray-500) !important;
-}
-.article-body .diagram figcaption a {
-  color: var(--gray-500) !important;
-}
