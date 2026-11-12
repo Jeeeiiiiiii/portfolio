@@ -244,9 +244,9 @@ export const projects: Project[] = [
     slug: 'model-signoff',
     title: 'Model Sign-off',
     tagline: 'a new model goes live only when it beats the old one and a reviewer agrees',
-    status: 'in-progress',
+    status: 'shipped',
     kind: 'project',
-    period: 'nov 2026 —',
+    period: 'nov 2026',
     summary:
       'A release process for models at a regulated company: every new model is tested against the one in production on the same data, promoted only through a pull request a risk reviewer approves, and leaves an evidence pack an auditor can read months later.',
     stack: ['MLflow 3', 'Argo Workflows', 'Argo CD', 'Kubernetes', 'kind', 'XGBoost', 'scikit-learn', 'Python', 'pytest', 'GitHub Actions'],
@@ -292,18 +292,17 @@ export const projects: Project[] = [
       'A plain-language evaluation report per candidate, and an evidence pack per release with data hashes, approver and the report hash.',
       'Promotion refused if the gate failed, if the comparison is stale, or if a high-risk model has no named approver.',
       'Protected attributes (sex, marriage, age) are never model inputs, only used to check the model.',
-      '21 tests, including the gate rules as a pure function and a test that a changed test set is refused.',
+      '26 tests, including the gate rules as a pure function and a test that a changed test set is refused.',
     ],
     honest: [
-      'Measured on the UCI credit card default data (30,000 real card holders): logistic regression v1 at 0.712 AUC, XGBoost v2 at 0.775 and approved, XGBoost with five engineered features v3 at 0.780 but blocked, because AUC for customers with other or unknown education fell from 0.708 to 0.656. 9 of 9 scenario checks pass.',
-      'That blocking group has only 103 customers in the test set, so the drop is noisy. A real gate would add confidence intervals before blocking on a small group.',
-      'On kind: Argo Workflows trains and gates each model in 30 to 50 seconds, approval is a Git commit, and Argo CD applies it 13 to 51 seconds later. An approval without a named approver and an approval for the blocked model both failed the sync and left the model in use unchanged; 9 of 9 cluster checks pass.',
+      'Measured on the UCI credit card default data (30,000 real card holders): logistic regression v1 at 0.712 AUC, XGBoost v2 at 0.775 and approved, XGBoost with five engineered features v3 at 0.780 overall but worse for customers with other or unknown education (0.708 to 0.656).',
+      'That drop first blocked v3, but a paired bootstrap showed its 95 percent interval (-0.128 to +0.022) includes zero: 103 customers can’t confirm it. The gate now has three outcomes: fail when a drop is confirmed, review when it isn’t (the approval must name the group), pass otherwise.',
+      'On kind (10 of 10 checks): Argo Workflows trains and gates each model, approval is a Git commit, and Argo CD applies it in about a minute. Unapproved and failed versions both failed the sync and left the model in use unchanged. The same code trained a slightly different v3 on Linux than on Windows, enough to turn review into fail; inside the pipeline, training twice gave identical results, so only pipeline-trained models count.',
       'What broke: MLflow 3.18 was OOM-killed until its background job workers (1.9 GB) were switched off; the frozen test set hashed differently on Windows and in Linux pods because of CSV line endings, and the guard refused to run until that was pinned; the Argo executor containers were refused by the restricted Pod Security level until the executor was configured for it.',
       'Lab shortcuts: a local Git server stands in for GitHub, the CI workflow has not run, the Argo UI has no login. The fraud model and the SageMaker comparison are not built.',
     ],
     next: [
       'Onboard the fraud model as the second team and count the steps.',
-      'Bootstrap confidence intervals for the per-group checks.',
       'The same model on SageMaker once, compared on setup time, cost and effort.',
     ],
   },
@@ -313,26 +312,27 @@ export const projects: Project[] = [
     slug: 'model-hosting',
     title: 'Model Hosting Platform',
     tagline: 'one pull request from a trained model to a live endpoint',
-    status: 'in-design',
+    status: 'shipped',
     kind: 'project',
-    period: 'planned, nov 2026',
+    period: 'nov 2026',
     summary:
-      'One supported way to put a model online: a team adds one file, and the platform builds the endpoint, rolls it out gradually, rolls it back on its own when it gets slow, scales it to zero when idle, and shows the cost per team. Includes a gateway for LLM calls with a budget per team.',
-    stack: ['KServe', 'Knative', 'Gateway API', 'Argo CD', 'Helm', 'Terraform', 'EKS', 'OpenCost', 'LiteLLM', 'k6'],
+      'One supported way to put a model online: a team adds one file, CI checks it against a schema and the model registry, and Argo CD renders a KServe endpoint from a shared chart behind a Gateway API entry point. New versions roll out 10, 50, 100 percent at a time and roll back on their own if they get slow; idle models can sleep outside office hours, cost is reported per team, and an LLM gateway gives each team a key and a token budget.',
+    stack: ['KServe', 'Gateway API', 'Envoy Gateway', 'Argo CD', 'KEDA', 'OpenCost', 'Agent Router', 'Ollama', 'Terraform', 'EKS', 'Helm', 'MLflow', 'Python', 'kind'],
     links: { post: 'model-hosting-design' },
     purpose: [
       'Data scientists can train a model in a day and then wait weeks for a container, a namespace, a load balancer, monitoring and an approval. Each team does it slightly differently, so every outage is new. A shared, supported path means the platform team solves the hard parts once.',
-      'The credit and fraud models from the Model Sign-off project are served through it, as two teams sharing one chart.',
+      'It serves the models approved by Model Sign-off, on the same cluster. Today that is the credit model; the fraud model is the planned second team.',
     ],
     ascii: `   team adds serving/<model>.yaml ─▶ CI checks it ─▶ Helm renders a KServe endpoint
                                                           │
-                                         Argo CD deploys ◀┘
-                                         canary 10% ─▶ latency or errors bad? ─▶ roll back
-                                         idle ─▶ scale to zero
-                                         cost per team (OpenCost)
-
-   apps ─▶ LLM gateway ─▶ Claude API | small local model
-           per-team keys, token budgets, fallback, usage metrics`,
+   (schema + "did this version pass the gate?")          │
+                                     Argo CD ApplicationSet ◀┘  one app per file
+                                     KServe Standard: Deployment + HPA + HTTPRoute
+                                     Gateway API (Envoy) ─▶ /v1/models/<name>:predict
+   model server: loads the exact version pinned in Git,
+                 refuses a version that failed the gate, exports latency metrics
+   release guard: canary 10 → 50 → 100 %, reads the canary's latency
+                  histogram each step, p95 over target ─▶ back to 0 %`,
     decisions: [
       {
         title: 'KServe, not Seldon Core',
@@ -343,19 +343,36 @@ export const projects: Project[] = [
         why: 'ingress-nginx was retired in March 2026 and gets no more fixes, including security fixes.',
       },
       {
-        title: 'Shared Terraform modules',
-        why: 'A cluster module, a model-namespace module (its own IAM role, bucket and quotas) and an observability module. Two teams consume the same modules; tested locally, applied once on real EKS with the cost published.',
+        title: 'The version is pinned in Git, not followed by alias',
+        why: 'What runs is always what was reviewed, and a rollback is a revert. If the endpoint followed @champion, a registry change would change production with no deploy.',
+      },
+      {
+        title: 'Canary at the route, by a small guard',
+        why: 'KServe’s own canary needs its serverless mode, and Argo Rollouts or Flagger would fight KServe over the Deployment it manages. A small controller owns the Gateway API route instead and moves its weights. Git still decides what is released; the guard only decides how much traffic it gets.',
+      },
+      {
+        title: 'Defence in depth for bad versions',
+        why: 'CI rejects a version that failed the gate. If one gets past CI anyway, the model server refuses to load it, the new pod never becomes ready, and the rolling update keeps the old version serving.',
       },
     ],
     practices: [
-      'Canary releases with automatic rollback on a latency or error target.',
-      'Scale-to-zero for idle models, with the cold start measured.',
-      'Per-team cost and per-team LLM token budgets.',
+      'A JSON schema for the team file, and a CI check that asks the registry whether the pinned version passed the gate.',
+      'One Argo CD ApplicationSet over serving/*.yaml: adding a model is adding a file, deleting the file removes the endpoint.',
+      'Platform-owned probes, restricted Pod Security, labels per team, and a Prometheus latency histogram on every endpoint.',
+      'CPU-based autoscaling per endpoint, with bounds from the team file.',
+      '25 unit tests, including the release guard’s step decision as a pure function.',
     ],
-    honest: ['Not built yet. This page is the plan; it will show measured results once they exist.'],
+    honest: [
+      'Measured on kind (11 of 11 checks): 26 seconds from commit to an endpoint answering through the Gateway; p95 7.7 ms over 300 sequential requests against a 100 ms target; under 6 concurrent clients the HPA scaled 1 to 3 replicas with 0 errors in 21,937 requests; a release pinning the blocked v3 left v2 answering all 565 requests with none failed.',
+      'What broke: the first "1 second to live" measurement was wrong because the old pod was still answering; the ApplicationSet only looked for new files every 3 minutes (193 seconds to live) until that was set to 20 seconds; the HPA ignored the CPU target annotation; the Gateway never reported ready because kind has no load balancer.',
+      'Progressive release (7 of 7 checks, about 20 requests a second): a healthy canary was promoted in 91 seconds with the traffic share matching each step and 0 failed requests; a canary made 150 ms slower was rolled back automatically 30 seconds after it got traffic, while at 10 percent, with 40 of 397 requests reaching it and none failing.',
+      'Idle hours (5 of 5): a serving file can add a schedule; outside it the endpoint scaled to zero in 43 seconds and answered again 65 seconds after the window opened. OpenCost, grouped by team label: about $0.21 a day always on vs $0.075 on a weekday schedule, at lab prices.',
+      'LLM gateway (6 of 6) on Agent Router: per-team API keys, a token budget per team (429 after 308 of 300 tokens, the other team unaffected even when its name was spoofed), fallback to a local model when the hosted provider failed, and 6.2 ms of gateway overhead measured inside the cluster. The hosted provider is a stand-in; there is no Claude API key in the lab.',
+      'What broke: OpenCost first priced CPU about 40 times too high and grouped nothing by team until kube-state-metrics allowlisted the label; the token budget silently did not apply because a route-level policy overrides a gateway-level one; a canary got traffic before its pod was ready until the guard waited for it.',
+    ],
     next: [
-      'The one-file-to-endpoint path with the credit model first.',
-      'Measure: time from merge to live, cold start, p95 latency under load, cost per team per day.',
+      'One real EKS run with the bill published (the Terraform modules are written and validated).',
+      'Claude behind the LLM gateway instead of the stand-in provider.',
     ],
   },
 
