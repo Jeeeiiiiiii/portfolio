@@ -43,6 +43,11 @@ export interface Project {
   purpose: string[];
   /** monospace ASCII picture; rendered in a <pre> */
   ascii?: string;
+  /**
+   * Eraser diagrams shared with the project's blog post: a name in
+   * public/diagrams/blog/ and the text a screen reader gets instead.
+   */
+  diagrams?: { name: string; alt: string }[];
   /** the design decisions, each with the reason behind it */
   decisions: ProjectDecision[];
   /** practices the project demonstrates, one line each */
@@ -70,17 +75,9 @@ export const projects: Project[] = [
       'When a payment provider fails, the payment app retries on a backup provider so the customer can still pay. That keeps sales flowing, but a provider that took the money and then returned an error leads to a second charge. This project measures exactly when that happens and builds what an operations team needs to catch it.',
       'The payment app itself is Hyperswitch, used as is. This is the platform and the failure testing around it, with test cards and simulated providers only. No real money moves.',
     ],
-    ascii: `   customer ─▶ Hyperswitch router ─▶ mock provider A  (fails on demand: 500, hang, reset,
-                    │      │             mock provider B   "charge, then fail")
-                    │      └─ retry rules = the failover policy
-                    ▼
-                 Postgres ◀── reconciler (read-only, every 15 s)
-                                 │  compares provider charges with stored payments
-                                 ▼
-                 Prometheus ─▶ Alertmanager ─▶ Slack
-                 (provider SLO, double charge, stuck payment, release blocked)
-
-   kind cluster:  Argo CD ◀── Git    Kyverno: only signed images with an SBOM start`,
+    diagrams: [
+      { name: 'payments-failover', alt: "The customer pays through Hyperswitch, which stores each payment in Postgres and charges provider A. Provider A fails on demand; when a retry rule matches, Hyperswitch retries on provider B. Both providers are one mock service, which publishes a settlement report of what it charged. A read-only reconciler runs every 60 seconds (every 15 in the alert tests), compares that report with the payments it reads from the Hyperswitch API, and exposes the result as metrics. Prometheus scrapes them and alerts through Alertmanager to a Slack webhook, tested so far with a stand-in." },
+    ],
     decisions: [
       {
         title: 'Retry rules are the failover policy',
@@ -134,16 +131,9 @@ export const projects: Project[] = [
       'A trading bot is only as good as the prices it sees. When the market data feed froze while the price fell 3%, the bot kept quoting around the old price, every quote on the wrong side of the market, and logged nothing. This project builds the safety layer a platform team would put around such a bot.',
       'The bot is Hummingbot, used as is. It paper trades against a mock exchange: no exchange accounts, no API keys, no real orders.',
     ],
-    ascii: `   bot (Hummingbot, paper trading)  ── no route to the internet
-     │  resolves Binance hostnames to the mock, trusts only the lab CA
-     ▼
-   mock exchange ── prices and faults on demand (freeze, drop, 429, hang)
-   bot ── MQTT ──▶ Mosquitto (login + per-bot topic rules) ◀── guard
-   guard ── its own feed + best bid/ask ── halts a bot on:
-              5 s of silence, or an order more than 5 bps through the market
-   Prometheus ─▶ Alertmanager ─▶ Slack
-
-   kind: two bots, Flux from Git, secrets SOPS-encrypted, halt = ConfigMap key`,
+    diagrams: [
+      { name: 'crypto-guard', alt: "The mock exchange sends prices to the bot and a separate feed to the guard. The guard reads the bot's orders from its log and halts it after 5 seconds with no market data, or when an order is more than 5 basis points through the best price. To halt, it sends a stop command over MQTT, retried up to six times until acknowledged, and writes a halt file the bot can only read; the bot refuses to start while it exists. The guard's metrics go to Prometheus, which alerts through Alertmanager to a Slack webhook." },
+    ],
     decisions: [
       {
         title: 'Watch from outside the bot',
@@ -195,14 +185,9 @@ export const projects: Project[] = [
       'A fraud model sits in the payment path: every card payment waits for its answer. It must be fast, it must see the same inputs it was trained on, and someone must notice when it starts getting things wrong.',
       'The project started from a working repo and turned into a list of silent bugs. The worst one: the scoring service encoded "visa" as 7412 while training had encoded it as 2, so the live model was reading nonsense and still answering 200 OK.',
     ],
-    ascii: `   offline (scheduled)                         online (per payment)
-   transactions ─▶ Stage 0 features ─▶ Redis    payment ─▶ enrichment ─▶ scoring API
-                   (past data only)       │                    ▲   │          │
-                         │                └──── history ───────┘   │   allow / review / block
-                         ▼                                         ▼
-                    train (XGBoost + Optuna) ─▶ MLflow ─── model + encoders
-                                                                  │
-   drift job (PSI per feature) ─▶ Prometheus ◀── feedback store (prediction ⨝ real outcome)`,
+    diagrams: [
+      { name: 'fraud-scoring', alt: "Offline, a batch job turns transactions into history features using past data only. They go to feature tables, which Feast loads into Redis, and to training with XGBoost and Optuna, which saves the model and its encoders to MLflow. Live, each payment goes to the scoring API, which loads the model and encoders from MLflow at startup, asks the enrichment service for history from Redis plus live counts within half a second, and returns allow, review or block." },
+    ],
     decisions: [
       {
         title: 'Serving loads the encoders training saved',
@@ -255,16 +240,9 @@ export const projects: Project[] = [
       'At a bank, a model cannot go live because its author says it is better. Someone has to prove it beats the current model on the same test, someone from risk has to sign it off, and an auditor must be able to see who approved what. Without a platform this is spreadsheets, screenshots and email.',
       'Two models go through it, as if from two teams: a credit default model on a public dataset and the fraud model from the Fraud Detection project.',
     ],
-    ascii: `   new model ─▶ evaluation gate ──────────────────────────▶ report
-                 same frozen test set as @champion
-                 must win overall AND no group of customers may get worse
-                      │ pass
-                      ▼
-                 @challenger ─▶ pull request: move @champion ─▶ risk reviewer approves
-                                                              │
-                                     Argo CD applies ◀────────┘
-                                     evidence pack: model card, data hash,
-                                     report, approver, date`,
+    diagrams: [
+      { name: 'model-signoff', alt: "Training registers a new model version in MLflow and nothing else. The gate scores it and the current @champion on the same frozen test set, with five checks: minimum quality (AUC at least 0.70), beats the current model by at least 0.005 AUC, no age, sex or education group worse by more than 0.01 AUC, fairness across sexes within 5 points, and stable scores (PSI at most 0.10). A 95 percent bootstrap interval decides each group drop: fail if the whole interval is below zero, review if the data can't confirm it, otherwise pass. A passed or flagged version becomes @challenger with a report a reviewer can read. Going live is a pull request that sets champion to that version, which a risk reviewer must approve through CODEOWNERS. On merge, an Argo CD sync hook runs promote: it refuses a version with no named approver, a failed version or an unnamed flagged group, so the sync fails and the champion stays; otherwise @champion moves and an evidence pack with approver, data hashes, checks and report hash is stored in MLflow." },
+    ],
     decisions: [
       {
         title: 'Promotion is a pull request',
@@ -323,16 +301,11 @@ export const projects: Project[] = [
       'Data scientists can train a model in a day and then wait weeks for a container, a namespace, a load balancer, monitoring and an approval. Each team does it slightly differently, so every outage is new. A shared, supported path means the platform team solves the hard parts once.',
       'It serves the models approved by Model Sign-off, on the same cluster. Today that is the credit model; the fraud model is the planned second team.',
     ],
-    ascii: `   team adds serving/<model>.yaml ─▶ CI checks it ─▶ Helm renders a KServe endpoint
-                                                          │
-   (schema + "did this version pass the gate?")          │
-                                     Argo CD ApplicationSet ◀┘  one app per file
-                                     KServe Standard: Deployment + HPA + HTTPRoute
-                                     Gateway API (Envoy) ─▶ /v1/models/<name>:predict
-   model server: loads the exact version pinned in Git,
-                 refuses a version that failed the gate, exports latency metrics
-   release guard: canary 10 → 50 → 100 %, reads the canary's latency
-                  histogram each step, p95 over target ─▶ back to 0 %`,
+    diagrams: [
+      { name: 'model-hosting', alt: "A team opens a pull request adding serving/credit-default.yaml. CI checks it against a JSON schema and asks MLflow whether that version exists and passed Model Sign-off's gate. On merge, an Argo CD ApplicationSet creates one application per serving file and renders a shared Helm chart. KServe in Standard mode creates a Deployment, an autoscaler at 70 percent CPU and an HTTPRoute on the shared Envoy Gateway. The model server loads exactly the pinned version from MLflow, refuses one that didn't pass the gate, and exposes latency metrics." },
+      { name: 'hosting-canary', alt: "Adding a canary version to the serving file makes the chart render a second endpoint and a release config. The release guard, a small controller, owns the model's route and splits traffic between stable and canary. It waits until a canary pod is ready, then moves through 10, 50 and 100 percent, 30 seconds per step. At each step it reads only that step's requests from the canary pods' metrics. If the error rate is over 1 percent or p95 latency is over the file's target, it sets the canary to 0 percent and records a Warning event. Too few requests means keep watching; otherwise it moves to the next step and finally marks the canary promoted." },
+      { name: 'hosting-llm-gateway', alt: "A team's app sends a request with its API key to the LLM gateway, Envoy with Agent Router. The gateway maps the key to a team and sets the team header itself, never trusting the client's. It charges each team's hourly token budget in Redis from the usage the provider reports. Requests for the model \"assistant\" go to the hosted provider, and if it fails, to a small local model on Ollama." },
+    ],
     decisions: [
       {
         title: 'KServe, not Seldon Core',
@@ -392,14 +365,9 @@ export const projects: Project[] = [
       'Companies that own servers want to use them first, because they are already paid for, and rent cloud capacity only for the peaks. It is also how most cloud migrations start: gradually, one workload at a time. The hard part is making the same job run in both places without engineers choosing where.',
       'It practises the middle stage of a cloud migration, where old servers and the cloud run side by side and one queue decides where each job goes.',
     ],
-    ascii: `   engineer ─▶ training job (same YAML everywhere)
-                  │
-                  ▼
-   manager cluster: Kueue + MultiKueue
-      ├── room locally? ─▶ "own servers" cluster (kind/k3s)  ── MinIO
-      └── no ─▶ AWS EKS (spot, budget cap per team)          ── S3
-                  │
-   MLflow (one registry) · Grafana: utilisation, queue time, cost per job`,
+    diagrams: [
+      { name: 'hybrid-training', alt: "An engineer submits a training job, the same YAML everywhere. A manager cluster running Kueue with MultiKueue sends it to the on-prem cluster (kind or k3s, data in MinIO) when there is room, or to an AWS EKS cluster on spot nodes (data in S3) when local capacity is full and the job allows cloud, within a daily budget per team. Both send models to one MLflow registry and report utilisation and cost to Grafana." },
+    ],
     decisions: [
       {
         title: 'Engineers do not pick the cluster',
