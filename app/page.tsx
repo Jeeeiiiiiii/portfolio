@@ -3,7 +3,8 @@ import Link from "next/link";
 import { SiAmazonwebservices, SiKubernetes, SiHelm, SiTerraform, SiDocker, SiArgo, SiGithubactions, SiJenkins, SiPrometheus, SiGrafana, SiIstio, SiPython, SiLinux, SiNextdotjs, SiTypescript } from 'react-icons/si';
 import { VscAzure } from 'react-icons/vsc';
 import Footer from '@/components/Footer';
-import { formatPostDate, getAllPosts, pickHomePosts } from '@/lib/blog';
+import HomePosts from '@/components/HomePosts';
+import { getAllPosts, pickHomePosts } from '@/lib/blog';
 
 export const metadata = {
   title: "Devops Engineer | Aurjei Steven Carreon",
@@ -149,35 +150,7 @@ export default function AboutPage() {
         </section>
 
         {/* Blog — the posts chosen with `featured` in their frontmatter (lib/blog.ts) */}
-        <section className="mb-14">
-          <div className="flex items-baseline justify-between gap-4 mb-5">
-            <h2 className="section-label">01 — blog</h2>
-            {posts.length > homePosts.length && (
-              <Link href="/blog" className="micro hover:text-ink transition-colors duration-200">
-                show all {posts.length} posts →
-              </Link>
-            )}
-          </div>
-          {homePosts.length > 0 ? (
-            <div className="divide-y divide-gray-200 border-y border-gray-200">
-              {homePosts.map((post) => (
-                <Link key={post.slug} href={`/blog/${post.slug}`} className="group block py-5">
-                  <div className="flex justify-between items-baseline gap-4 mb-1">
-                    <h3 className="font-semibold tracking-tight group-hover:underline underline-offset-2 decoration-gray-300">
-                      {post.title}
-                    </h3>
-                    <span className="micro shrink-0">{formatPostDate(post.date)}</span>
-                  </div>
-                  <p className="text-[13px] text-gray-500 leading-relaxed line-clamp-2">{post.excerpt}</p>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            <p className="text-[13px] text-gray-500 border-y border-gray-200 py-5">
-              New posts on the MLOps and DevOps labs are on the way.
-            </p>
-          )}
-        </section>
+        <HomePosts posts={homePosts} total={posts.length} />
 
         {/* Stack */}
         <section className="mb-14">

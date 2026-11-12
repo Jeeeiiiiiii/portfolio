@@ -51,6 +51,8 @@ export interface Post extends PostFrontmatter {
   html: string;
   /** the post's h2s, for the table of contents */
   headings: Heading[];
+  /** estimated minutes to read the body, at least 1 */
+  readingMinutes: number;
 }
 
 function slugify(text: string): string {
@@ -127,7 +129,15 @@ export function parsePost(slug: string, source: string): Post {
     const issues = parsed.error.issues.map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`).join('; ');
     throw new Error(`blog: ${slug}.md has invalid frontmatter — ${issues}`);
   }
-  return { slug, ...parsed.data, ...renderMarkdown(content) };
+  return { slug, ...parsed.data, ...renderMarkdown(content), readingMinutes: readingMinutes(content) };
+}
+
+const WORDS_PER_MINUTE = 230;
+
+/** Reading time for a markdown body; code blocks and markup count as words, which is close enough. */
+export function readingMinutes(markdown: string): number {
+  const words = markdown.split(/\s+/).filter((w) => /[A-Za-z0-9]/.test(w)).length;
+  return Math.max(1, Math.round(words / WORDS_PER_MINUTE));
 }
 
 function includeDrafts(): boolean {

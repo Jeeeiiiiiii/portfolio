@@ -244,12 +244,12 @@ export const projects: Project[] = [
     slug: 'model-signoff',
     title: 'Model Sign-off',
     tagline: 'a new model goes live only when it beats the old one and a reviewer agrees',
-    status: 'in-design',
+    status: 'in-progress',
     kind: 'project',
-    period: 'planned, nov 2026',
+    period: 'nov 2026 —',
     summary:
       'A release process for models at a regulated company: every new model is tested against the one in production on the same data, promoted only through a pull request a risk reviewer approves, and leaves an evidence pack an auditor can read months later.',
-    stack: ['MLflow', 'Argo Workflows', 'Argo CD', 'Evidently', 'copier', 'GitHub Actions', 'kind', 'SageMaker', 'Terraform'],
+    stack: ['MLflow 3', 'XGBoost', 'scikit-learn', 'Python', 'pytest', 'GitHub Actions', 'Argo Workflows', 'Argo CD', 'kind', 'SageMaker'],
     links: { post: 'model-signoff-design' },
     purpose: [
       'At a bank, a model cannot go live because its author says it is better. Someone has to prove it beats the current model on the same test, someone from risk has to sign it off, and an auditor must be able to see who approved what. Without a platform this is spreadsheets, screenshots and email.',
@@ -257,7 +257,7 @@ export const projects: Project[] = [
     ],
     ascii: `   new model ─▶ evaluation gate ──────────────────────────▶ report
                  same frozen test set as @champion
-                 must win on the agreed metric AND pass stability checks
+                 must win overall AND no group of customers may get worse
                       │ pass
                       ▼
                  @challenger ─▶ pull request: move @champion ─▶ risk reviewer approves
@@ -275,19 +275,35 @@ export const projects: Project[] = [
         why: 'MLflow\'s Staging and Production stages are deprecated. Aliases like @champion and @challenger are the current way.',
       },
       {
+        title: 'Check every group, not just the average',
+        why: 'The gate compares AUC per age band, sex and education group, and the share of real defaulters caught for men and women. An overall gain can hide one group that got worse; the third model in the test proved it.',
+      },
+      {
+        title: 'One frozen test set',
+        why: 'The test rows are chosen by a hash of each customer ID and their SHA-256 is locked. If the test data changes, every evaluation stops, because comparisons with earlier models would be meaningless.',
+      },
+      {
         title: 'Compare self-hosted with managed',
         why: 'The same model runs once on MLflow on kind and once on SageMaker, and a decision record compares setup time, cost, security fit and effort.',
       },
     ],
     practices: [
-      'A project template, so a new model repo starts with tests, CI and tracking already wired.',
-      'A pipeline generated from one config file per model.',
-      'An evaluation report per candidate model, kept with the model version.',
+      'One config file per model: data, feature sets, the groups to check, and the gate thresholds.',
+      'A plain-language evaluation report per candidate, and an evidence pack per release with data hashes, approver and the report hash.',
+      'Promotion refused if the gate failed, if the comparison is stale, or if a high-risk model has no named approver.',
+      'Protected attributes (sex, marriage, age) are never model inputs, only used to check the model.',
+      '21 tests, including the gate rules as a pure function and a test that a changed test set is refused.',
     ],
-    honest: ['Not built yet. This page is the plan; it will show measured results once they exist.'],
+    honest: [
+      'Measured on the UCI credit card default data (30,000 real card holders): logistic regression v1 at 0.712 AUC, XGBoost v2 at 0.775 and approved, XGBoost with five engineered features v3 at 0.780 but blocked, because AUC for customers with other or unknown education fell from 0.708 to 0.656. 9 of 9 scenario checks pass.',
+      'That blocking group has only 103 customers in the test set, so the drop is noisy. A real gate would add confidence intervals before blocking on a small group.',
+      'Runs locally on a SQLite MLflow registry. The CI workflow is written but has not run, because the repo has no remote yet. Argo Workflows, the fraud model and the SageMaker comparison are not built.',
+    ],
     next: [
-      'Build the gate and the promotion pull request first, with the credit model.',
-      'Onboard the fraud model and measure how many steps it takes.',
+      'Run train and gate as an Argo Workflows pipeline on kind, with Argo CD applying promotions.',
+      'Onboard the fraud model as the second team and count the steps.',
+      'Bootstrap confidence intervals for the per-group checks.',
+      'The same model on SageMaker once, compared on setup time, cost and effort.',
     ],
   },
 
